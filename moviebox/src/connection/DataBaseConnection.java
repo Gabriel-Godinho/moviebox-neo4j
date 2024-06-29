@@ -21,7 +21,7 @@ public class DataBaseConnection {
         final String PORT = "7687";
         final String CONNECTION_URL = String.format("%s:%s", HOSTNAME, PORT);
         final String USER_NAME = "neo4j";
-        final String PASSWORD = "moviebox234";
+        final String PASSWORD = "moviebox123";
         this.CONN = DriverManager.getConnection(CONNECTION_URL, USER_NAME, PASSWORD);
     }
 
