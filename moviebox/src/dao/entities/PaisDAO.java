@@ -20,14 +20,14 @@ public class PaisDAO {
 
         try {
             Connection conn = DataBaseConnection.getInstance().getConn();
-            String sql = "SELECT * FROM paises";
+            String sql = "MATCH (p:Pais) RETURN p\n";
             PreparedStatement preparedStatement = conn.prepareStatement(sql);
             ResultSet resultSet = preparedStatement.executeQuery();
 
             while (resultSet.next()) {
                 PaisOrigem paisOrigem = new PaisOrigem();
                 paisOrigem.setIdPais(resultSet.getLong("id_pais"));
-                paisOrigem.setNomePais(resultSet.getString("nome_pais"));
+                paisOrigem.setNomePais(resultSet.getString("nome"));
                 paises.add(paisOrigem);
             }
         } catch (SQLException e) {
@@ -42,14 +42,14 @@ public class PaisDAO {
 
         try {
             Connection conn = DataBaseConnection.getInstance().getConn();
-            String sql = "SELECT * FROM paises WHERE id_pais = ?";
+            String sql = "MATCH (p:Pais) WHERE ID(p) = $1 RETURN d";
             PreparedStatement preparedStatement = conn.prepareStatement(sql);
             preparedStatement.setLong(1, idPais);
             ResultSet resultSet = preparedStatement.executeQuery();
 
             if (resultSet.next()) {
                 paisOrigem.setIdPais(resultSet.getLong("id_pais"));
-                paisOrigem.setNomePais(resultSet.getString("nome_pais"));
+                paisOrigem.setNomePais(resultSet.getString("nome"));
             }
         } catch (SQLException e) {
             mensagem.layoutMensagem("Erro ao buscar o país especificado!");
@@ -61,7 +61,7 @@ public class PaisDAO {
     public final void save(PaisOrigem paisOrigem) {
         try {
             Connection conn = DataBaseConnection.getInstance().getConn();
-            String sql = "INSERT INTO paises(nome_pais) VALUES(?)";
+            String sql = "CREATE (p:Pais {nome: $1})";
             PreparedStatement preparedStatement = conn.prepareStatement(sql);
             preparedStatement.setString(1, paisOrigem.getNomePais());
             preparedStatement.executeUpdate();
@@ -77,7 +77,7 @@ public class PaisDAO {
             Connection conn = DataBaseConnection.getInstance().getConn();
 
             if (!paisOrigem.getNomePais().isBlank()) {
-                String sql = "UPDATE paises SET nome_pais = ? WHERE id_pais = ?";
+                String sql = "MATCH (p:Pais {nome: ?}) SET ID(p) = $1";
                 PreparedStatement preparedStatement = conn.prepareStatement(sql);
                 preparedStatement.setString(1, paisOrigem.getNomePais());
                 preparedStatement.setLong(2, paisOrigem.getIdPais());

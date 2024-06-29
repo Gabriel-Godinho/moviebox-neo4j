@@ -21,15 +21,13 @@ public class DiretorDAO {
 
         try {
             Connection conn = DataBaseConnection.getInstance().getConn();
-            String sql = "SELECT * FROM diretores";
+            String sql = "MATCH (d:Diretor) RETURN d";
             PreparedStatement preparedStatement = conn.prepareStatement(sql);
             ResultSet resultSet = preparedStatement.executeQuery();
 
             while (resultSet.next()) {
                 Diretor diretor = new Diretor();
-                diretor.setIdDiretor(resultSet.getLong("id_diretor"));
-                diretor.setNomeDiretor(resultSet.getString("nome_diretor"));
-                diretor.setIdNacionalidade(resultSet.getLong("id_nacionalidade"));
+                diretor.setNomeDiretor(resultSet.getString("nome"));
                 diretores.add(diretor);
             }
         } catch (SQLException e) {
@@ -44,15 +42,14 @@ public class DiretorDAO {
 
         try {
             Connection conn = DataBaseConnection.getInstance().getConn();
-            String sql = "SELECT * FROM diretores WHERE id_diretor = ?";
+            String sql = "MATCH (d:Diretor) WHERE ID(d) = $1";
             PreparedStatement preparedStatement = conn.prepareStatement(sql);
             preparedStatement.setLong(1, idDiretor);
             ResultSet rs = preparedStatement.executeQuery();
 
             if (rs.next()) {
                 diretor.setIdDiretor(rs.getLong("id_diretor"));
-                diretor.setNomeDiretor(rs.getString("nome_diretor"));
-                diretor.setIdNacionalidade(rs.getLong("id_nacionalidade"));
+                diretor.setNomeDiretor(rs.getString("nome"));
             }
         } catch (SQLException e) {
             mensagem.layoutMensagem("Erro ao buscar os diretores cadastrados!");
@@ -64,7 +61,7 @@ public class DiretorDAO {
     public final void save(Diretor diretor) {
         try {
             Connection conn = DataBaseConnection.getInstance().getConn();
-            String sql = "INSERT INTO diretores(nome_diretor, id_nacionalidade) VALUES(?, ?)";
+            String sql = "CREATE (d:Diretor {nome: $1})";
             PreparedStatement preparedStatement = conn.prepareStatement(sql);
             preparedStatement.setString(1, diretor.getNomeDiretor());
             preparedStatement.setLong(2, diretor.getIdNacionalidade());
@@ -78,19 +75,15 @@ public class DiretorDAO {
 
     public final void update(Diretor diretor) {
         try {
+            // TODO - Verificar como fazer
             Connection conn = DataBaseConnection.getInstance().getConn();
             StringBuilder sb = new StringBuilder("UPDATE diretores SET");
 
             List<Object> params = new ArrayList<>();
 
             if (!diretor.getNomeDiretor().equals("0")) {
-                sb.append(" nome_diretor = ?,");
+                sb.append(" nome = ?,");
                 params.add(diretor.getNomeDiretor());
-            }
-
-            if (diretor.getIdNacionalidade() != 0) {
-                sb.append(" id_nacionalidade = ?,");
-                params.add(diretor.getIdNacionalidade());
             }
 
             if (sb.toString().endsWith(",")) {

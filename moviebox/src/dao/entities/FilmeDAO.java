@@ -21,18 +21,15 @@ public class FilmeDAO {
 
         try {
             Connection conn = DataBaseConnection.getInstance().getConn();
-            String sql = "SELECT * FROM filmes";
+            String sql = "MATCH (f:Filme) RETURN f";
             PreparedStatement preparedStatement = conn.prepareStatement(sql);
             ResultSet resultSet = preparedStatement.executeQuery();
 
             while (resultSet.next()) {
                 Filme filme = new Filme();
-                filme.setNomeFilme(resultSet.getString("nome_filme"));
-                filme.setIdFilme(resultSet.getLong("id_filme"));
+                filme.setNomeFilme(resultSet.getString("nome"));
                 filme.setDuracao(resultSet.getInt("duracao"));
                 filme.setAno(resultSet.getInt("ano"));
-                filme.setIdDiretor(resultSet.getLong("id_diretor"));
-                filme.setIdPais(resultSet.getLong("id_pais"));
                 filme.setSinopse(resultSet.getString("sinopse"));
                 filmes.add(filme);
             }
@@ -48,18 +45,16 @@ public class FilmeDAO {
 
         try {
             Connection conn = DataBaseConnection.getInstance().getConn();
-            String sql = "SELECT * FROM filmes WHERE id_filme = ?";
+            String sql = "MATCH (f:Filme) WHERE ID(f) = $1";
             PreparedStatement preparedStatement = conn.prepareStatement(sql);
             preparedStatement.setLong(1, idFilme);
             ResultSet resultSet = preparedStatement.executeQuery();
 
             if (resultSet.next()) {
                 filme.setIdDiretor(resultSet.getLong("id_filme"));
-                filme.setNomeFilme(resultSet.getString("nome_filme"));
+                filme.setNomeFilme(resultSet.getString("nome"));
                 filme.setDuracao(resultSet.getInt("duracao"));
                 filme.setAno(resultSet.getInt("ano"));
-                filme.setIdDiretor(resultSet.getLong("id_diretor"));
-                filme.setIdPais(resultSet.getLong("id_pais"));
                 filme.setSinopse(resultSet.getString("sinopse"));
             }
         } catch (SQLException e) {
@@ -72,13 +67,11 @@ public class FilmeDAO {
     public final void save(Filme filme) {
         try {
             Connection conn = DataBaseConnection.getInstance().getConn();
-            String sql = "INSERT INTO filmes(nome_filme, duracao, ano, id_diretor, id_pais, sinopse) VALUES(?, ?, ?, ?, ?, ?)";
+            String sql = "CREATE (f:Filme {nome_filme: $1, duracao: $2, ano: $3, sinopse: $4})";
             PreparedStatement preparedStatement = conn.prepareStatement(sql);
             preparedStatement.setString(1, filme.getNomeFilme());
             preparedStatement.setInt(2, filme.getDuracao());
             preparedStatement.setInt(3, filme.getAno());
-            preparedStatement.setLong(4, filme.getIdDiretor());
-            preparedStatement.setLong(5, filme.getIdPais());
             preparedStatement.setString(6, filme.getSinopse());
             preparedStatement.executeUpdate();
 
@@ -90,13 +83,14 @@ public class FilmeDAO {
 
     public final void update(Filme filme) {
         try {
+            // TODO - Verificar como fazer
             Connection conn = DataBaseConnection.getInstance().getConn();
             StringBuilder sb = new StringBuilder("UPDATE filmes SET");
 
             List<Object> params = new ArrayList<>();
 
             if (!filme.getNomeFilme().equals("0")) {
-                sb.append(" nome_filme = ?,");
+                sb.append(" nome = ?,");
                 params.add(filme.getNomeFilme());
             }
 
@@ -108,16 +102,6 @@ public class FilmeDAO {
             if (filme.getAno() != 0) {
                 sb.append(" ano = ?,");
                 params.add(filme.getAno());
-            }
-
-            if (filme.getIdDiretor() != 0) {
-                sb.append(" id_diretor = ?,");
-                params.add(filme.getIdDiretor());
-            }
-
-            if (filme.getIdPais() != 0) {
-                sb.append(" id_pais = ?,");
-                params.add(filme.getIdPais());
             }
 
             if (!filme.getSinopse().equals("0")) {
@@ -155,7 +139,7 @@ public class FilmeDAO {
     public final void delete(long idFilme) {
         try {
             Connection conn = DataBaseConnection.getInstance().getConn();
-            String sql = "DELETE FROM filmes WHERE id_filme = ?";
+            String sql = "MATCH (f:Filme {nome: ?}) DETACH DELETE f";
             PreparedStatement preparedStatement = conn.prepareStatement(sql);
             preparedStatement.setLong(1, idFilme);
             preparedStatement.executeUpdate();
