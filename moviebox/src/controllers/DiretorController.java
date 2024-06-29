@@ -1,7 +1,7 @@
 package controllers;
 
 import dao.entities.DiretorDAO;
-import dao.entities.NacionalidadeDAO;
+import dao.entities.PaisDAO;
 import model.Diretor;
 import view.MensagensView;
 
@@ -13,14 +13,13 @@ import java.util.stream.Collectors;
 public class DiretorController {
 
     private final DiretorDAO DIRETOR_DAO = new DiretorDAO();
-    private final NacionalidadeDAO NACIONALIDADE_DAO = new NacionalidadeDAO();
     private final MensagensView MENSAGEM_VIEW = new MensagensView();
+    private final PaisDAO PAIS_DAO = new PaisDAO();
 
-    public void cadastrarDiretor(String nomeDiretor, long idNacionalidade) {
-        Diretor diretor = new Diretor(nomeDiretor, idNacionalidade);
+    public void cadastrarDiretor(String nomeDiretor) {
+        Diretor diretor = new Diretor(nomeDiretor);
 
         diretor.setNomeDiretor(nomeDiretor);
-        diretor.setIdNacionalidade(idNacionalidade);
 
         DIRETOR_DAO.save(diretor);
     }
@@ -32,13 +31,13 @@ public class DiretorController {
         for (Diretor diretor : diretoresOrdenados) {
             System.out.println(" ID: " + diretor.getIdDiretor());
             System.out.println(" Nome: " + diretor.getNomeDiretor());
-            System.out.println(" Nacionalidade: " + NACIONALIDADE_DAO.getById(diretor.getIdNacionalidade()).getNomeNacionalidade());
+            System.out.println(" País de origem: " + PAIS_DAO.getById() );
             System.out.println("------------------------------------------------");
         }
     }
 
-    public void editarDiretor(int idDiretor, String nomeDiretor, long idNacionalidade) {
-        Diretor diretor = new Diretor(idDiretor, nomeDiretor, idNacionalidade);
+    public void editarDiretor(int idDiretor, String nomeDiretor) {
+        Diretor diretor = new Diretor(idDiretor, nomeDiretor);
 
         DIRETOR_DAO.update(diretor);
     }
