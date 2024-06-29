@@ -11,18 +11,17 @@ public class DataBaseConnection {
 
     private DataBaseConnection() throws SQLException {
         try {
-            Class.forName("org.postgresql.Driver");
+            Class.forName("org.neo4j.jdbc.bolt.BoltDriver");
         } catch (ClassNotFoundException e) {
             System.out.println("Ocorreu um erro ao tentar estabelecer a conexão com o banco de dados!");
             System.exit(1);
         }
 
-        final String DB_NAME = "colecao_filmes";
-        final String HOSTNAME = "bancodados2.cf6gg8ueyt35.sa-east-1.rds.amazonaws.com";
-        final String PORT = "5432";
-        final String CONNECTION_URL = String.format("jdbc:postgresql://%s:%s/%s", HOSTNAME, PORT, DB_NAME);
-        final String USER_NAME = "postgres";
-        final String PASSWORD = "moviebox235689";
+        final String HOSTNAME = "neo4j@bolt://localhost";
+        final String PORT = "7687";
+        final String CONNECTION_URL = String.format("%s:%s", HOSTNAME, PORT);
+        final String USER_NAME = "neo4j";
+        final String PASSWORD = "moviebox234";
         this.CONN = DriverManager.getConnection(CONNECTION_URL, USER_NAME, PASSWORD);
     }
 
