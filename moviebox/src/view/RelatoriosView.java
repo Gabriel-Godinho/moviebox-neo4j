@@ -74,7 +74,7 @@ public class RelatoriosView {
     public void relatorioFilmesNaWatchlistPorAno(Scanner input) {
         mensagem.layoutMensagem("      Buscar filmes da watchlist por ANO       ");
         System.out.print(" Ano em que foi adicionado: ");
-        int anoInsercao = input.nextInt();
+        long anoInsercao = input.nextLong();
 
         CONTROLLER.listarFilmesNaWatchlistPorData(anoInsercao);
     }

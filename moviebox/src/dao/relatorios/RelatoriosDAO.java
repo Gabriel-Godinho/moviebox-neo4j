@@ -174,7 +174,7 @@ public class RelatoriosDAO {
      * @param anoInsercao Ano de inserção do filme.
      * @return Todos os filmes da watchlist adicionados dentro do período especificado.
      * */
-    public final Set<Filme> buscarFilmesNaWatchlistPorAnoInserido(int anoInsercao) {
+    public final Set<Filme> buscarFilmesNaWatchlistPorAnoInserido(long anoInsercao) {
         Set<Filme> filmes = new HashSet<>();
 
         try (Session session = DataBaseConnection.getInstance().getSession()) {

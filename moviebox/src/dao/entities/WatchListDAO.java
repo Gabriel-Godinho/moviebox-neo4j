@@ -49,8 +49,7 @@ public class WatchListDAO {
             Result result = session.run(query, Values.parameters("idFilme", idFilme));
 
             if (result.hasNext()) {
-                String dataInsercao = result.next().get("dataInsercao").toString();
-                return dataInsercao;
+                return result.next().get("dataInsercao").toString();
             }
         } catch (Exception e) {
             mensagem.layoutMensagem("Erro ao obter a data de inserção do filme na watchlist! " + e.getMessage());

@@ -71,7 +71,7 @@ public class RelatoriosController {
         }
     }
 
-    public void listarFilmesNaWatchlistPorData(int anoInsercao) {
+    public void listarFilmesNaWatchlistPorData(long anoInsercao) {
 
         MENSAGEM_VIEW.limparTela(6);
         MENSAGEM_VIEW.layoutMensagem("Filmes adicionados na sua watchlist em " + anoInsercao);
