@@ -85,7 +85,7 @@ public class Main {
                     mensagem.retornarMenu();
                     escolha = input.nextInt();
             }
-        } while (escolha >= 0);
+        } while (escolha >= -1);
         input.close();
     }
 

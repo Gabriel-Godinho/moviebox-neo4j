@@ -191,4 +191,6 @@ CREATE
   (Alfred)-[:DIRIGIU]->(Psicose),
   (Psicose)-[:PAIS_ORIGEM]->(EstadosUnidos)
 
+CREATE (WatchlistUser:Watchlist {titulo: 'Watchklist'})
+
 MATCH (n) RETURN n
