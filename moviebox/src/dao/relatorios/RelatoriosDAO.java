@@ -180,9 +180,10 @@ public class RelatoriosDAO {
         try (Session session = DataBaseConnection.getInstance().getSession()) {
             String query = """
                 MATCH ((f:Filme)-[r:PERTENCE_A]->(w:Watchlist))
-                WHERE date.year(r.adicionado_em) = $anoInsercao
+                WHERE date(r.adicionado_em).year = $anoInsercao
+                OPTIONAL MATCH (f)-[:PAIS_ORIGEM]->(p:Pais)
                 RETURN f, ID(f) AS idFilme, f.nome AS nomeFilme, f.duracao AS duracao,
-                   f.ano AS ano, ID(f)-[:PAIS_ORIGEM]->(p:Pais) AS idPais, f.sinopse AS sinopse
+                    f.ano AS ano, ID(p) AS idPaisOrigem, f.sinopse AS sinopse
             """;
 
             Result result = session.run(query, Values.parameters("anoInsercao", anoInsercao));
