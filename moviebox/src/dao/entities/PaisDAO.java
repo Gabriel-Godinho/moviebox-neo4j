@@ -77,6 +77,26 @@ public class PaisDAO {
         return paisOrigem;
     }
 
+    public final PaisOrigem getByIdFilme(long idFilme) {
+        PaisOrigem paisOrigem = null;
+
+        try (Session session = DataBaseConnection.getInstance().getSession()) {
+            String query = "MATCH (f:Filme WHERE ID(f) = $id)--(pais:Pais) RETURN pais.nome AS nome, ID(pais) AS idPais";
+            Result result = session.run(query, Values.parameters("id", idFilme));
+
+            if (result.hasNext()) {
+                Record record = result.next();
+                paisOrigem = new PaisOrigem();
+                paisOrigem.setIdPais(record.get("idPais").asLong());
+                paisOrigem.setNomePais(record.get("nome").asString());
+            }
+        } catch (Exception e) {
+            mensagem.layoutMensagem("Erro ao buscar o país especificado! " + e.getMessage());
+        }
+
+        return paisOrigem;
+    }
+
     public final void save(PaisOrigem paisOrigem) {
         try (Session session = DataBaseConnection.getInstance().getSession()) {
             String query = "CREATE (p:Pais {nome: $nome})";

@@ -54,6 +54,26 @@ public class DiretorDAO {
         return diretor;
     }
 
+    public final Diretor getByIdFilme(long idFilme) {
+        Diretor diretor = null;
+
+        try (Session session = DataBaseConnection.getInstance().getSession()) {
+            String cypherQuery = "MATCH (f:Filme WHERE ID(f) = $id)--(d:Diretor) RETURN ID(d) AS idDiretor, d.nome AS nome";
+            Result result = session.run(cypherQuery, Values.parameters("id", idFilme));
+
+            if (result.hasNext()) {
+                Record record = result.next();
+                diretor = new Diretor();
+                diretor.setIdDiretor(record.get("idDiretor").asLong());
+                diretor.setNomeDiretor(record.get("nome").asString());
+            }
+        } catch (Exception e) {
+            System.out.println("Erro ao buscar o diretor com ID " + idFilme + ": " + e.getMessage());
+        }
+
+        return diretor;
+    }
+
     public final void save(Diretor diretor) {
         try (Session session = DataBaseConnection.getInstance().getSession()) {
             String cypherQuery = "CREATE (d:Diretor {nome: $nome})";

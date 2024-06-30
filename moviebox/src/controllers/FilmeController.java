@@ -47,10 +47,10 @@ public class FilmeController {
         for (Filme filme : filmesOrdenados) {
             System.out.println(" ID: " + filme.getIdFilme());
             System.out.println(" Nome: " + filme.getNomeFilme());
-            //System.out.println(" Diretor: " + DIRETOR_DAO.getById(filme.getIdDiretor()).getNomeDiretor());
+            System.out.println(" Diretor: " + DIRETOR_DAO.getByIdFilme(filme.getIdFilme()).getNomeDiretor());
             System.out.println(" Duração: " + filme.getDuracao() + " minutos");
             System.out.println(" Ano de lançamento: " + filme.getAno());
-            //System.out.println(" País de origem: " + PAIS_DAO.getById(filme.getIdPais()).getNomePais());
+            System.out.println(" País de origem: " + PAIS_DAO.getByIdFilme(filme.getIdFilme()).getNomePais());
             System.out.println(" Sinopse: " + filme.getSinopse());
             System.out.println("------------------------------------------------");
         }
