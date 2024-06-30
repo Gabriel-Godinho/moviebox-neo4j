@@ -98,12 +98,12 @@ public class DiretorDAO {
             Map<String, Object> parameters = new HashMap<>();
             parameters.put("id", diretor.getIdDiretor());
 
-            if (!diretor.getNomeDiretor().equals("0")) {
+            if (!diretor.getNomeDiretor().equals("-1")) {
                 cypherQuery.append("SET d.nome = $nome\n");
                 parameters.put("nome", diretor.getNomeDiretor());
             }
 
-            if (diretor.getIdPais() != 0) {
+            if (diretor.getIdPais() != -1) {
                 // Deleta relacionamento antigo
                 cypherQuery.append("WITH d\n");
                 cypherQuery.append("OPTIONAL MATCH (d)-[r:PAIS_NASCIMENTO]->()\n");

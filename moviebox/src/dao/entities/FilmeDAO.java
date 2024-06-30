@@ -95,25 +95,25 @@ public class FilmeDAO {
 
             boolean hasSetClause = false;
 
-            if (filme.getNomeFilme() != null && !filme.getNomeFilme().isBlank()) {
+            if (!filme.getNomeFilme().equals("-1")) {
                 sb.append("f.nome = $nome, ");
                 params.put("nome", filme.getNomeFilme());
                 hasSetClause = true;
             }
 
-            if (filme.getDuracao() != 0) {
+            if (filme.getDuracao() != -1) {
                 sb.append("f.duracao = $duracao, ");
                 params.put("duracao", filme.getDuracao());
                 hasSetClause = true;
             }
 
-            if (filme.getAno() != 0) {
+            if (filme.getAno() != -1) {
                 sb.append("f.ano = $ano, ");
                 params.put("ano", filme.getAno());
                 hasSetClause = true;
             }
 
-            if (filme.getSinopse() != null && !filme.getSinopse().isBlank()) {
+            if (!filme.getSinopse().equals("-1")) {
                 sb.append("f.sinopse = $sinopse, ");
                 params.put("sinopse", filme.getSinopse());
                 hasSetClause = true;
@@ -126,7 +126,7 @@ public class FilmeDAO {
                 sb.setLength(sb.length() - 4);  // Remove "SET "
             }
 
-            if (filme.getIdPais() != 0) {
+            if (filme.getIdPais() != -1) {
                 // Deleta relacionamento antigo
                 sb.append("WITH f\n");
                 sb.append("OPTIONAL MATCH (f)-[r:PAIS_ORIGEM]->()\n");
@@ -139,7 +139,7 @@ public class FilmeDAO {
                 params.put("idPais", filme.getIdPais());
             }
 
-            if (filme.getIdDiretor() != 0) {
+            if (filme.getIdDiretor() != -1) {
                 // Deleta relacionamento antigo
                 sb.append("WITH f\n");
                 sb.append("OPTIONAL MATCH (f)-[r:DIRIGIU]->()\n");

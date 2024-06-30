@@ -110,7 +110,7 @@ public class PaisDAO {
 
     public final void update(PaisOrigem paisOrigem) {
         try (Session session = DataBaseConnection.getInstance().getSession()) {
-            if (!paisOrigem.getNomePais().isBlank()) {
+            if (!paisOrigem.getNomePais().equals("-1")) {
                 String query = "MATCH (p:Pais) WHERE ID(p) = $id SET p.nome = $nome";
                 session.run(query, Values.parameters("id", paisOrigem.getIdPais(), "nome", paisOrigem.getNomePais()));
 
