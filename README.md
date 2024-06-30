@@ -13,14 +13,7 @@ O domínio de informação escolhido foi o gerenciamento de filmes. Dentro deste
 
 # Tecnologias usadas
 - Java 21 LTS
-- PostgreSQL
-- AWS RDS
-
-# Banco de dados
-
-Foi criada uma instância de um banco de dados Postgres no RDS (Relational Database Service) da AWS.
-
-AWS RDS (Relationa Database Service): https://aws.amazon.com/pt/rds/
+- Neo4J
 
 # Como executar
 
