@@ -85,42 +85,74 @@ public class FilmeDAO {
 
     public final void update(Filme filme) {
         try (Session session = DataBaseConnection.getInstance().getSession()) {
-
-            StringBuilder sb = new StringBuilder("MATCH (f:Filme) WHERE ID(f) = $idFilme " +
-                    "OPTIONAL MATCH (f)-[ro:PAIS_ORIGEM]->(:Pais) " +
-                    "OPTIONAL MATCH (f)<-[rd:DIRIGIU]-(:Diretor) " +
-                    "DELETE ro DELETE rd WITH f " +
-                    "MATCH (novoP:Pais) WHERE id(novoP) = $idPais ");
+            StringBuilder sb = new StringBuilder("MATCH (f:Filme) WHERE ID(f) = $idFilme\n");
 
             Map<String, Object> params = new HashMap<>();
             params.put("idFilme", filme.getIdFilme());
 
+            // Atualiza propriedades do nó Filme
+            sb.append("SET ");
+
+            boolean hasSetClause = false;
+
             if (filme.getNomeFilme() != null && !filme.getNomeFilme().isBlank()) {
                 sb.append("f.nome = $nome, ");
                 params.put("nome", filme.getNomeFilme());
+                hasSetClause = true;
             }
 
             if (filme.getDuracao() != 0) {
                 sb.append("f.duracao = $duracao, ");
                 params.put("duracao", filme.getDuracao());
+                hasSetClause = true;
             }
 
             if (filme.getAno() != 0) {
                 sb.append("f.ano = $ano, ");
                 params.put("ano", filme.getAno());
+                hasSetClause = true;
             }
 
             if (filme.getSinopse() != null && !filme.getSinopse().isBlank()) {
                 sb.append("f.sinopse = $sinopse, ");
                 params.put("sinopse", filme.getSinopse());
+                hasSetClause = true;
             }
 
-            if (sb.toString().endsWith(", ")) {
+            if (hasSetClause) {
                 sb.setLength(sb.length() - 2);  // Remove a última vírgula e espaço
+                sb.append("\n");
+            } else {
+                sb.setLength(sb.length() - 4);  // Remove "SET "
+            }
+
+            if (filme.getIdPais() != 0) {
+                // Deleta relacionamento antigo
+                sb.append("WITH f\n");
+                sb.append("OPTIONAL MATCH (f)-[r:PAIS_ORIGEM]->()\n");
+                sb.append("DELETE r\n");
+
+                // Cria novo relacionamento
+                sb.append("WITH f\n");
+                sb.append("MATCH (p:Pais) WHERE ID(p) = $idPais\n");
+                sb.append("CREATE (f)-[:PAIS_ORIGEM]->(p)\n");
+                params.put("idPais", filme.getIdPais());
+            }
+
+            if (filme.getIdDiretor() != 0) {
+                // Deleta relacionamento antigo
+                sb.append("WITH f\n");
+                sb.append("OPTIONAL MATCH (f)-[r:DIRIGIU]->()\n");
+                sb.append("DELETE r\n");
+
+                // Cria novo relacionamento
+                sb.append("WITH f\n");
+                sb.append("MATCH (d:Diretor) WHERE ID(d) = $idDiretor\n");
+                sb.append("CREATE (f)-[:DIRIGIU]->(d)\n");
+                params.put("idDiretor", filme.getIdDiretor());
             }
 
             session.run(sb.toString(), params);
-
             mensagem.layoutMensagem("Filme alterado com sucesso!");
         } catch (Exception e) {
             mensagem.layoutMensagem("Erro ao alterar filme! " + e.getMessage());
