@@ -18,10 +18,13 @@ public class Diretor implements Serializable {
     @ToString.Exclude
     private long idDiretor;
 
+    private long idPais;
+
     private String nomeDiretor;
 
     // Construtor com apenas o nome do diretor
-    public Diretor(String nomeDiretor) {
+    public Diretor(long idDiretor, String nomeDiretor) {
+        this.idDiretor = idDiretor;
         this.nomeDiretor = nomeDiretor;
     }
 

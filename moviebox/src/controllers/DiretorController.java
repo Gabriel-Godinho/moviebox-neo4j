@@ -16,9 +16,10 @@ public class DiretorController {
     private final MensagensView MENSAGEM_VIEW = new MensagensView();
     private final PaisDAO PAIS_DAO = new PaisDAO();
 
-    public void cadastrarDiretor(String nomeDiretor) {
-        Diretor diretor = new Diretor(nomeDiretor);
+    public void cadastrarDiretor(String nomeDiretor, long idPais) {
+        Diretor diretor = new Diretor();
 
+        diretor.setIdPais(idPais);
         diretor.setNomeDiretor(nomeDiretor);
 
         DIRETOR_DAO.save(diretor);

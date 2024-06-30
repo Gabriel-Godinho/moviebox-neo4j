@@ -12,6 +12,7 @@ import java.util.*;
 public class DiretorDAO {
 
     private final MensagensView mensagem = new MensagensView();
+    private final PaisDAO PAIS_DAO = new PaisDAO();
 
     public final Set<Diretor> getAll() {
         Set<Diretor> diretores = new HashSet<>();
@@ -82,7 +83,8 @@ public class DiretorDAO {
 
             session.run(cypherQuery, Values.parameters(
                     "nome", diretor.getNomeDiretor(),
-                    "idPais", // AQUI));
+                    "idPais", diretor.getIdPais()
+            ));
             System.out.println("Diretor cadastrado com sucesso!");
         } catch (Exception e) {
             System.out.println("Erro ao cadastrar o novo diretor! " + e.getMessage());
