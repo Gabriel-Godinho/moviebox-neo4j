@@ -31,7 +31,7 @@ public class DiretorDAO {
                 diretores.add(diretor);
             }
         } catch (SQLException e) {
-            System.out.println("Erro ao buscar os países cadastrados!");
+            System.out.println("Erro ao buscar os diretores cadastrados!");
         }
 
         return diretores;
