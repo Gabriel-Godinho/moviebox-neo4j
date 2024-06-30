@@ -31,7 +31,7 @@ public class WatchListDAO {
                 WatchListItem watchListItem = new WatchListItem();
                 watchListItem.setIdFilme(record.get("idFilme").asLong());
                 watchListItem.setDataInsercaoFilme(
-                        LocalDateTime.parse(record.get("dataInsercao").asString())
+                        LocalDateTime.parse(record.get("dataInsercao").toString())
                                 .format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
                 );
                 watchList.getItensWatchList().add(watchListItem);
@@ -52,7 +52,7 @@ public class WatchListDAO {
             Result result = session.run(query, Values.parameters("idFilme", idFilme));
 
             if (result.hasNext()) {
-                String dataInsercao = result.next().get("dataInsercao").asString();
+                String dataInsercao = result.next().get("dataInsercao").toString();
                 return LocalDateTime.parse(dataInsercao).format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
             }
         } catch (Exception e) {
