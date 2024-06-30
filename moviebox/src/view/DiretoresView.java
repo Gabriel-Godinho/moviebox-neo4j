@@ -48,7 +48,7 @@ public class DiretoresView {
 
         ArrayList<Object> dados = formulario(input);
 
-        CONTROLLER.editarDiretor(idDiretor, (String)dados.getFirst());
+        CONTROLLER.editarDiretor(idDiretor, (String)dados.getFirst(), (Long)dados.get(1));
     }
 
     private ArrayList<Object> formulario(Scanner input) {

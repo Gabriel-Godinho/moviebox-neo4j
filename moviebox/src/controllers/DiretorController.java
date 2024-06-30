@@ -37,8 +37,8 @@ public class DiretorController {
         }
     }
 
-    public void editarDiretor(int idDiretor, String nomeDiretor) {
-        Diretor diretor = new Diretor(idDiretor, nomeDiretor);
+    public void editarDiretor(int idDiretor, String nomeDiretor, long idPais) {
+        Diretor diretor = new Diretor(idDiretor, idPais, nomeDiretor);
 
         DIRETOR_DAO.update(diretor);
     }

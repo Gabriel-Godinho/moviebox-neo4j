@@ -93,18 +93,27 @@ public class DiretorDAO {
 
     public final void update(Diretor diretor) {
         try (Session session = DataBaseConnection.getInstance().getSession()) {
-            StringBuilder cypherQuery = new StringBuilder("MATCH (d:Diretor) WHERE id(d) = $id SET");
+            StringBuilder cypherQuery = new StringBuilder("MATCH (d:Diretor) WHERE ID(d) = $id\n");
 
             Map<String, Object> parameters = new HashMap<>();
             parameters.put("id", diretor.getIdDiretor());
 
             if (!diretor.getNomeDiretor().equals("0")) {
-                cypherQuery.append(" d.nome = $nome,");
+                cypherQuery.append("SET d.nome = $nome\n");
                 parameters.put("nome", diretor.getNomeDiretor());
             }
 
-            if (cypherQuery.toString().endsWith(",")) {
-                cypherQuery.deleteCharAt(cypherQuery.length() - 1); // Remove a vírgula final
+            if (diretor.getIdPais() != 0) {
+                // Deleta relacionamento antigo
+                cypherQuery.append("WITH d\n");
+                cypherQuery.append("OPTIONAL MATCH (d)-[r:PAIS_NASCIMENTO]->()\n");
+                cypherQuery.append("DELETE r\n");
+
+                // Cria novo relacionamento
+                cypherQuery.append("WITH d\n");
+                cypherQuery.append("MATCH (p:Pais) WHERE ID(p) = $idPais\n");
+                cypherQuery.append("CREATE (d)-[:PAIS_NASCIMENTO]->(p)\n");
+                parameters.put("idPais", diretor.getIdPais());
             }
 
             session.run(cypherQuery.toString(), parameters);
