@@ -1,4 +1,5 @@
 import controllers.*;
+import org.apache.log4j.PropertyConfigurator;
 import view.*;
 import java.util.Scanner;
 
@@ -7,6 +8,8 @@ public class Main {
     private static final MensagensView mensagem = new MensagensView();
 
     public static void main(String[] args)  {
+        String log4jConfPath = "./moviebox/src/resources/log4j.properties";
+        PropertyConfigurator.configure(log4jConfPath);
 
         int escolha;
         Scanner input = new Scanner(System.in);
