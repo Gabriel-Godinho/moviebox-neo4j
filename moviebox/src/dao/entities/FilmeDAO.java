@@ -2,15 +2,13 @@ package dao.entities;
 
 import connection.DataBaseConnection;
 import model.Filme;
+import org.neo4j.driver.Result;
+import org.neo4j.driver.Record;
+import org.neo4j.driver.Session;
 import view.MensagensView;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import org.neo4j.driver.Values;
+
+import java.util.*;
 
 public class FilmeDAO {
 
@@ -19,22 +17,22 @@ public class FilmeDAO {
     public final Set<Filme> getAll() {
         Set<Filme> filmes = new HashSet<>();
 
-        try {
-            Connection conn = DataBaseConnection.getInstance().getConn();
-            String sql = "MATCH (f:Filme) RETURN f";
-            PreparedStatement preparedStatement = conn.prepareStatement(sql);
-            ResultSet resultSet = preparedStatement.executeQuery();
+        try (Session session = DataBaseConnection.getInstance().getSession()) {
+            String query = "MATCH (f:Filme) RETURN ID(f) AS idFilme, f.nome AS nome, f.duracao AS duracao, f.ano AS ano, f.sinopse AS sinopse";
+            Result result = session.run(query);
 
-            while (resultSet.next()) {
+            while (result.hasNext()) {
+                Record record = result.next();
                 Filme filme = new Filme();
-                filme.setNomeFilme(resultSet.getString("nome"));
-                filme.setDuracao(resultSet.getInt("duracao"));
-                filme.setAno(resultSet.getInt("ano"));
-                filme.setSinopse(resultSet.getString("sinopse"));
+                filme.setIdPais(record.get("idFilme").asLong());
+                filme.setNomeFilme(record.get("nome").asString());
+                filme.setDuracao(record.get("duracao").asInt());
+                filme.setAno(record.get("ano").asInt());
+                filme.setSinopse(record.get("sinopse").asString());
                 filmes.add(filme);
             }
-        } catch (SQLException e) {
-            mensagem.layoutMensagem("Erro ao buscar os países cadastrados!");
+        } catch (Exception e) {
+            mensagem.layoutMensagem("Erro ao buscar os filmes cadastrados! " + e.getMessage());
         }
 
         return filmes;
@@ -43,111 +41,88 @@ public class FilmeDAO {
     public final Filme getById(long idFilme) {
         Filme filme = new Filme();
 
-        try {
-            Connection conn = DataBaseConnection.getInstance().getConn();
-            String sql = "MATCH (f:Filme) WHERE ID(f) = $1";
-            PreparedStatement preparedStatement = conn.prepareStatement(sql);
-            preparedStatement.setLong(1, idFilme);
-            ResultSet resultSet = preparedStatement.executeQuery();
+        try (Session session = DataBaseConnection.getInstance().getSession()) {
+            String query = "MATCH (f:Filme) WHERE ID(f) = $id RETURN f";
+            Result result = session.run(query, Values.parameters("id", idFilme));
 
-            if (resultSet.next()) {
-                filme.setIdDiretor(resultSet.getLong("id_filme"));
-                filme.setNomeFilme(resultSet.getString("nome"));
-                filme.setDuracao(resultSet.getInt("duracao"));
-                filme.setAno(resultSet.getInt("ano"));
-                filme.setSinopse(resultSet.getString("sinopse"));
+            if (result.hasNext()) {
+                Record record = result.next();
+                filme.setIdFilme(record.get("f").get("id").asLong());
+                filme.setNomeFilme(record.get("f").get("nome").asString());
+                filme.setDuracao(record.get("f").get("duracao").asInt());
+                filme.setAno(record.get("f").get("ano").asInt());
+                filme.setSinopse(record.get("f").get("sinopse").asString());
             }
-        } catch (SQLException e) {
-            mensagem.layoutMensagem("Erro ao buscar os diretores cadastrados!");
+        } catch (Exception e) {
+            mensagem.layoutMensagem("Erro ao buscar o filme especificado! " + e.getMessage());
         }
 
         return filme;
     }
 
     public final void save(Filme filme) {
-        try {
-            Connection conn = DataBaseConnection.getInstance().getConn();
-            String sql = "CREATE (f:Filme {nome_filme: $1, duracao: $2, ano: $3, sinopse: $4})";
-            PreparedStatement preparedStatement = conn.prepareStatement(sql);
-            preparedStatement.setString(1, filme.getNomeFilme());
-            preparedStatement.setInt(2, filme.getDuracao());
-            preparedStatement.setInt(3, filme.getAno());
-            preparedStatement.setString(6, filme.getSinopse());
-            preparedStatement.executeUpdate();
+        try (Session session = DataBaseConnection.getInstance().getSession()) {
+            String query = "CREATE (f:Filme {nome: $nome, duracao: $duracao, ano: $ano, sinopse: $sinopse})";
+            session.run(query, Values.parameters(
+                    "nome", filme.getNomeFilme(),
+                    "duracao", filme.getDuracao(),
+                    "ano", filme.getAno(),
+                    "sinopse", filme.getSinopse()
+            ));
 
             mensagem.layoutMensagem("Filme adicionado com sucesso!");
-        } catch (SQLException e) {
-            mensagem.layoutMensagem("Erro ao inserir o novo filme!");
+        } catch (Exception e) {
+            mensagem.layoutMensagem("Erro ao inserir o novo filme! " + e.getMessage());
         }
     }
 
     public final void update(Filme filme) {
-        try {
-            // TODO - Verificar como fazer
-            Connection conn = DataBaseConnection.getInstance().getConn();
-            StringBuilder sb = new StringBuilder("UPDATE filmes SET");
+        try (Session session = DataBaseConnection.getInstance().getSession()) {
+            StringBuilder sb = new StringBuilder("MATCH (f:Filme) WHERE ID(f) = $id SET ");
 
-            List<Object> params = new ArrayList<>();
+            Map<String, Object> params = new HashMap<>();
+            params.put("id", filme.getIdFilme());
 
-            if (!filme.getNomeFilme().equals("0")) {
-                sb.append(" nome = ?,");
-                params.add(filme.getNomeFilme());
+            if (filme.getNomeFilme() != null && !filme.getNomeFilme().isBlank()) {
+                sb.append("f.nome = $nome, ");
+                params.put("nome", filme.getNomeFilme());
             }
 
             if (filme.getDuracao() != 0) {
-                sb.append(" duracao = ?,");
-                params.add(filme.getDuracao());
+                sb.append("f.duracao = $duracao, ");
+                params.put("duracao", filme.getDuracao());
             }
 
             if (filme.getAno() != 0) {
-                sb.append(" ano = ?,");
-                params.add(filme.getAno());
+                sb.append("f.ano = $ano, ");
+                params.put("ano", filme.getAno());
             }
 
-            if (!filme.getSinopse().equals("0")) {
-                sb.append(" sinopse = ?,");
-                params.add(filme.getSinopse());
+            if (filme.getSinopse() != null && !filme.getSinopse().isBlank()) {
+                sb.append("f.sinopse = $sinopse, ");
+                params.put("sinopse", filme.getSinopse());
             }
 
-            if (sb.toString().endsWith(",")) {
-                sb.deleteCharAt(sb.length() - 1);
+            if (sb.toString().endsWith(", ")) {
+                sb.setLength(sb.length() - 2);  // Remove a última vírgula e espaço
             }
 
-            sb.append(" WHERE id_filme = ?");
-            params.add(filme.getIdFilme());
-
-            PreparedStatement preparedStatement = conn.prepareStatement(sb.toString());
-
-            for (int i = 0; i < params.size(); i++) {
-                Object value = params.get(i);
-                switch (value) {
-                    case String str -> preparedStatement.setString(i + 1, str);
-                    case Integer integer -> preparedStatement.setInt(i + 1, integer);
-                    case Long longInt -> preparedStatement.setLong(i + 1, longInt);
-                    default -> {}
-                }
-            }
-
-            preparedStatement.executeUpdate();
+            session.run(sb.toString(), params);
 
             mensagem.layoutMensagem("Filme alterado com sucesso!");
-        } catch (SQLException e) {
-            mensagem.layoutMensagem("Erro ao alterar filme!");
+        } catch (Exception e) {
+            mensagem.layoutMensagem("Erro ao alterar filme! " + e.getMessage());
         }
     }
 
     public final void delete(long idFilme) {
-        try {
-            Connection conn = DataBaseConnection.getInstance().getConn();
-            String sql = "MATCH (f:Filme {nome: ?}) DETACH DELETE f";
-            PreparedStatement preparedStatement = conn.prepareStatement(sql);
-            preparedStatement.setLong(1, idFilme);
-            preparedStatement.executeUpdate();
+        try (Session session = DataBaseConnection.getInstance().getSession()) {
+            String query = "MATCH (f:Filme) WHERE ID(f) = $id DETACH DELETE f";
+            session.run(query, Values.parameters("id", idFilme));
 
             mensagem.layoutMensagem("Filme excluído com sucesso!");
-        } catch (SQLException e) {
-            mensagem.layoutMensagem("Erro ao deletar filme!");
+        } catch (Exception e) {
+            mensagem.layoutMensagem("Erro ao deletar filme! " + e.getMessage());
         }
     }
-
 }

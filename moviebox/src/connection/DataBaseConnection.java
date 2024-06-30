@@ -1,39 +1,34 @@
 package connection;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
+import lombok.Getter;
+import org.neo4j.driver.AuthTokens;
+import org.neo4j.driver.Driver;
+import org.neo4j.driver.GraphDatabase;
+import org.neo4j.driver.Session;
 
+@Getter
 public class DataBaseConnection {
 
-    private final Connection CONN;
+    private final Driver driver;
     private static DataBaseConnection instance;
 
-    private DataBaseConnection() throws SQLException {
-        try {
-            Class.forName("org.neo4j.jdbc.bolt.BoltDriver");
-        } catch (ClassNotFoundException e) {
-            System.out.println("Ocorreu um erro ao tentar estabelecer a conexão com o banco de dados!");
-            System.exit(1);
-        }
-
-        final String HOSTNAME = "neo4j@bolt://localhost";
-        final String PORT = "7687";
-        final String CONNECTION_URL = String.format("%s:%s", HOSTNAME, PORT);
+    private DataBaseConnection() {
+        final String HOSTNAME = "bolt://localhost:7687";
         final String USER_NAME = "neo4j";
-        final String PASSWORD = "moviebox123";
-        this.CONN = DriverManager.getConnection(CONNECTION_URL, USER_NAME, PASSWORD);
+        final String PASSWORD = "moviebox234";
+
+        this.driver = GraphDatabase.driver(HOSTNAME, AuthTokens.basic(USER_NAME, PASSWORD));
     }
 
-    public static DataBaseConnection getInstance() throws SQLException {
+    public static DataBaseConnection getInstance() {
         if (instance == null) instance = new DataBaseConnection();
 
         return instance;
     }
 
-    public Connection getConn() {
-        return this.CONN;
+    public Session getSession() {
+        return this.driver.session();
     }
-
 }
+
 

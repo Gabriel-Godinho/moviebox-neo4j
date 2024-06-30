@@ -31,7 +31,7 @@ public class DiretorController {
         for (Diretor diretor : diretoresOrdenados) {
             System.out.println(" ID: " + diretor.getIdDiretor());
             System.out.println(" Nome: " + diretor.getNomeDiretor());
-            System.out.println(" País de origem: " + PAIS_DAO.getById(diretor.getIdPais()).getNomePais()));
+            System.out.println(" País de origem: " + PAIS_DAO.getByIdDiretor(diretor.getIdDiretor()).getNomePais());
             System.out.println("------------------------------------------------");
         }
     }

@@ -2,15 +2,12 @@ package dao.entities;
 
 import connection.DataBaseConnection;
 import model.Diretor;
+import org.neo4j.driver.Result;
+import org.neo4j.driver.Session;
+import org.neo4j.driver.Record;
+import org.neo4j.driver.Values;
 import view.MensagensView;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class DiretorDAO {
 
@@ -19,100 +16,74 @@ public class DiretorDAO {
     public final Set<Diretor> getAll() {
         Set<Diretor> diretores = new HashSet<>();
 
-        try {
-            Connection conn = DataBaseConnection.getInstance().getConn();
-            String sql = "MATCH (d:Diretor) RETURN d";
-            PreparedStatement preparedStatement = conn.prepareStatement(sql);
-            ResultSet resultSet = preparedStatement.executeQuery();
+        try (Session session = DataBaseConnection.getInstance().getSession()) {
+            String cypherQuery = "MATCH (d:Diretor) RETURN ID(d) AS idDiretor, d.nome AS nome";
+            Result result = session.run(cypherQuery);
 
-            while (resultSet.next()) {
+            while (result.hasNext()) {
+                Record record = result.next();
                 Diretor diretor = new Diretor();
-                diretor.setNomeDiretor(resultSet.getString("nome"));
+                diretor.setIdDiretor(record.get("idDiretor").asLong());
+                diretor.setNomeDiretor(record.get("nome").asString());
                 diretores.add(diretor);
             }
-        } catch (SQLException e) {
-            System.out.println("Erro ao buscar os diretores cadastrados!");
+        } catch (Exception e) {
+            System.out.println("Erro ao buscar os diretores cadastrados! " + e.getMessage());
         }
 
         return diretores;
     }
 
     public final Diretor getById(long idDiretor) {
-        Diretor diretor = new Diretor();
+        Diretor diretor = null;
 
-        try {
-            Connection conn = DataBaseConnection.getInstance().getConn();
-            String sql = "MATCH (d:Diretor) WHERE ID(d) = $1 RETURN d";
-            PreparedStatement preparedStatement = conn.prepareStatement(sql);
-            preparedStatement.setLong(1, idDiretor);
-            ResultSet rs = preparedStatement.executeQuery();
+        try (Session session = DataBaseConnection.getInstance().getSession()) {
+            String cypherQuery = "MATCH (d:Diretor) WHERE ID(d) = $id RETURN ID(d) AS id, d.nome AS nome";
+            Result result = session.run(cypherQuery, Values.parameters("id", idDiretor));
 
-            if (rs.next()) {
-                diretor.setIdDiretor(rs.getLong("id_diretor"));
-                diretor.setNomeDiretor(rs.getString("nome"));
+            if (result.hasNext()) {
+                Record record = result.next();
+                diretor = new Diretor();
+                diretor.setIdDiretor(record.get("id").asLong());
+                diretor.setNomeDiretor(record.get("nome").asString());
             }
-        } catch (SQLException e) {
-            mensagem.layoutMensagem("Erro ao buscar os diretores cadastrados!");
+        } catch (Exception e) {
+            System.out.println("Erro ao buscar o diretor com ID " + idDiretor + ": " + e.getMessage());
         }
 
         return diretor;
     }
 
     public final void save(Diretor diretor) {
-        try {
-            Connection conn = DataBaseConnection.getInstance().getConn();
-            String sql = "CREATE (d:Diretor {nome: $1})";
-            PreparedStatement preparedStatement = conn.prepareStatement(sql);
-            preparedStatement.setString(1, diretor.getNomeDiretor());
-//            preparedStatement.setLong(2, diretor.getIdNacionalidade());
-            preparedStatement.executeUpdate();
-
-            mensagem.layoutMensagem("Diretor cadastrado com sucesso!");
-        } catch (SQLException e) {
-            mensagem.layoutMensagem("Erro ao cadastrar o novo diretor!");
+        try (Session session = DataBaseConnection.getInstance().getSession()) {
+            String cypherQuery = "CREATE (d:Diretor {nome: $nome})";
+            session.run(cypherQuery, Values.parameters("nome", diretor.getNomeDiretor()));
+            System.out.println("Diretor cadastrado com sucesso!");
+        } catch (Exception e) {
+            System.out.println("Erro ao cadastrar o novo diretor! " + e.getMessage());
         }
     }
 
     public final void update(Diretor diretor) {
-        try {
-            // TODO - Verificar como fazer
-            // MATCH (d:Diretor) WHERE id(d) = 65 SET d.nome = 'Teste3'
-            Connection conn = DataBaseConnection.getInstance().getConn();
-//            StringBuilder sb = new StringBuilder("UPDATE diretores SET");
-            StringBuilder sb = new StringBuilder("MATCH (d:Diretor) WHERE id(d) = ? SET");
+        try (Session session = DataBaseConnection.getInstance().getSession()) {
+            StringBuilder cypherQuery = new StringBuilder("MATCH (d:Diretor) WHERE id(d) = $id SET");
 
-            List<Object> params = new ArrayList<>();
+            Map<String, Object> parameters = new HashMap<>();
+            parameters.put("id", diretor.getIdDiretor());
 
             if (!diretor.getNomeDiretor().equals("0")) {
-                sb.append(" d.nome = ?,");
-                params.add(diretor.getNomeDiretor());
+                cypherQuery.append(" d.nome = $nome,");
+                parameters.put("nome", diretor.getNomeDiretor());
             }
 
-            if (sb.toString().endsWith(",")) {
-                sb.deleteCharAt(sb.length() - 1);
+            if (cypherQuery.toString().endsWith(",")) {
+                cypherQuery.deleteCharAt(cypherQuery.length() - 1); // Remove a vírgula final
             }
 
-//            sb.append(" WHERE id(d) = ?");
-            params.add(diretor.getIdDiretor());
-
-            PreparedStatement preparedStatement = conn.prepareStatement(sb.toString());
-
-            for (int i = 0; i < params.size(); i++) {
-                Object value = params.get(i);
-                switch (value) {
-                    case String str -> preparedStatement.setString(i + 1, str);
-                    case Integer integer -> preparedStatement.setInt(i + 1, integer);
-                    case Long longInt -> preparedStatement.setLong(i + 1, longInt);
-                    default -> {}
-                }
-            }
-
-            preparedStatement.executeUpdate();
-
-            mensagem.layoutMensagem("Diretor atualizado com sucesso!");
-        } catch (SQLException e) {
-            mensagem.layoutMensagem("Erro ao atualizar o diretor!");
+            session.run(cypherQuery.toString(), parameters);
+            System.out.println("Diretor atualizado com sucesso!");
+        } catch (Exception e) {
+            System.out.println("Erro ao atualizar o diretor! " + e.getMessage());
         }
     }
-
 }

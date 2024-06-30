@@ -4,10 +4,11 @@ import connection.DataBaseConnection;
 import model.PaisOrigem;
 import view.MensagensView;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import org.neo4j.driver.Session;
+import org.neo4j.driver.Result;
+import org.neo4j.driver.Record;
+import org.neo4j.driver.Values;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -18,76 +19,85 @@ public class PaisDAO {
     public final Set<PaisOrigem> getAll() {
         Set<PaisOrigem> paises = new HashSet<>();
 
-        try {
-            Connection conn = DataBaseConnection.getInstance().getConn();
-            String sql = "MATCH (p:Pais) RETURN p\n";
-            PreparedStatement preparedStatement = conn.prepareStatement(sql);
-            ResultSet resultSet = preparedStatement.executeQuery();
+        try (Session session = DataBaseConnection.getInstance().getSession()) {
+            String query = "MATCH (p:Pais) RETURN ID(p) AS idPais, p.nome AS nome";
+            Result result = session.run(query);
 
-            while (resultSet.next()) {
+            while (result.hasNext()) {
+                Record record = result.next();
                 PaisOrigem paisOrigem = new PaisOrigem();
-                paisOrigem.setIdPais(resultSet.getLong("id_pais"));
-                paisOrigem.setNomePais(resultSet.getString("nome"));
+                paisOrigem.setIdPais(record.get("idPais").asLong());
+                paisOrigem.setNomePais(record.get("nome").asString());
                 paises.add(paisOrigem);
             }
-        } catch (SQLException e) {
-            mensagem.layoutMensagem("Erro ao buscar os países cadastrados!");
+        } catch (Exception e) {
+            mensagem.layoutMensagem("Erro ao buscar os países cadastrados! " + e.getMessage());
         }
 
         return paises;
     }
 
     public final PaisOrigem getById(long idPais) {
-        PaisOrigem paisOrigem = new PaisOrigem();
+        PaisOrigem paisOrigem = null;
 
-        try {
-            Connection conn = DataBaseConnection.getInstance().getConn();
-            String sql = "MATCH (p:Pais) WHERE ID(p) = $1 RETURN d";
-            PreparedStatement preparedStatement = conn.prepareStatement(sql);
-            preparedStatement.setLong(1, idPais);
-            ResultSet resultSet = preparedStatement.executeQuery();
+        try (Session session = DataBaseConnection.getInstance().getSession()) {
+            String query = "MATCH (p:Pais) WHERE ID(p) = $id RETURN ID(p) AS idPais, p.nome AS nome";
+            Result result = session.run(query, Values.parameters("id", idPais));
 
-            if (resultSet.next()) {
-                paisOrigem.setIdPais(resultSet.getLong("id_pais"));
-                paisOrigem.setNomePais(resultSet.getString("nome"));
+            if (result.hasNext()) {
+                Record record = result.next();
+                paisOrigem = new PaisOrigem();
+                paisOrigem.setIdPais(record.get("idPais").asLong());
+                paisOrigem.setNomePais(record.get("nome").asString());
             }
-        } catch (SQLException e) {
-            mensagem.layoutMensagem("Erro ao buscar o país especificado!");
+        } catch (Exception e) {
+            mensagem.layoutMensagem("Erro ao buscar o país especificado! " + e.getMessage());
+        }
+
+        return paisOrigem;
+    }
+
+    public final PaisOrigem getByIdDiretor(long idDiretor) {
+        PaisOrigem paisOrigem = null;
+
+        try (Session session = DataBaseConnection.getInstance().getSession()) {
+            String query = "MATCH (d:Diretor WHERE id(d) = $id)--(pais:Pais) RETURN p.nome AS nome, ID(p) AS idPais";
+            Result result = session.run(query, Values.parameters("id", idDiretor));
+
+            if (result.hasNext()) {
+                Record record = result.next();
+                paisOrigem = new PaisOrigem();
+                paisOrigem.setIdPais(record.get("idPais").asLong());
+                paisOrigem.setNomePais(record.get("nome").asString());
+            }
+        } catch (Exception e) {
+            mensagem.layoutMensagem("Erro ao buscar o país especificado! " + e.getMessage());
         }
 
         return paisOrigem;
     }
 
     public final void save(PaisOrigem paisOrigem) {
-        try {
-            Connection conn = DataBaseConnection.getInstance().getConn();
-            String sql = "CREATE (p:Pais {nome: $1})";
-            PreparedStatement preparedStatement = conn.prepareStatement(sql);
-            preparedStatement.setString(1, paisOrigem.getNomePais());
-            preparedStatement.executeUpdate();
+        try (Session session = DataBaseConnection.getInstance().getSession()) {
+            String query = "CREATE (p:Pais {nome: $nome})";
+            session.run(query, Values.parameters("nome", paisOrigem.getNomePais()));
 
             mensagem.layoutMensagem("País cadastrado com sucesso!");
-        } catch (SQLException e) {
-            mensagem.layoutMensagem("Erro ao cadastrar o novo país!");
+        } catch (Exception e) {
+            mensagem.layoutMensagem("Erro ao cadastrar o novo país! " + e.getMessage());
         }
     }
 
     public final void update(PaisOrigem paisOrigem) {
-        try {
-            Connection conn = DataBaseConnection.getInstance().getConn();
-
+        try (Session session = DataBaseConnection.getInstance().getSession()) {
             if (!paisOrigem.getNomePais().isBlank()) {
-                String sql = "MATCH (p:Pais {nome: ?}) SET ID(p) = $1";
-                PreparedStatement preparedStatement = conn.prepareStatement(sql);
-                preparedStatement.setString(1, paisOrigem.getNomePais());
-                preparedStatement.setLong(2, paisOrigem.getIdPais());
-                preparedStatement.executeUpdate();
+                String query = "MATCH (p:Pais) WHERE ID(p) = $id SET p.nome = $nome";
+                session.run(query, Values.parameters("id", paisOrigem.getIdPais(), "nome", paisOrigem.getNomePais()));
 
                 mensagem.layoutMensagem("País atualizado com sucesso!");
             }
-        } catch (SQLException e) {
-            mensagem.layoutMensagem("Erro ao editar o país de origem!");
+        } catch (Exception e) {
+            mensagem.layoutMensagem("Erro ao editar o país de origem! " + e.getMessage());
         }
     }
-
 }
