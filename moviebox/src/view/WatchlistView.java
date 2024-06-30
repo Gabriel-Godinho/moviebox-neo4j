@@ -27,19 +27,17 @@ public class WatchlistView {
         mensagem.limparTela(6);
         mensagem.layoutMensagem("            Watchlist - Adicionar              ");
         System.out.print(" ID do filme que deseja adicionar: ");
-        int idFilme = input.nextInt();
+        long idFilme = input.nextInt();
 
         CONTROLLER.inserirFilme(idFilme);
     }
 
     public void remover(Scanner input) {
-
         mensagem.limparTela(6);
         mensagem.layoutMensagem("             Watchlist - Remover               ");
         System.out.print(" ID do filme que deseja remover: ");
-        int idFilme = input.nextInt();
+        long idFilme = input.nextLong();
 
         CONTROLLER.removerFilme(idFilme);
     }
-
 }

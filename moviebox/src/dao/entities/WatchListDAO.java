@@ -3,8 +3,13 @@ package dao.entities;
 import connection.DataBaseConnection;
 import model.WatchList;
 import model.WatchListItem;
+import org.neo4j.driver.Result;
+import org.neo4j.driver.Session;
+import org.neo4j.driver.Values;
+import org.neo4j.driver.Record;
 import view.MensagensView;
-import java.sql.*;
+
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 
@@ -15,88 +20,90 @@ public class WatchListDAO {
     public final WatchList getWatchList() {
         WatchList watchList = new WatchList(new ArrayList<>());
 
-//        try {
-//            Connection conn = DataBaseConnection.getInstance().getConn();
-//            String sql = "SELECT * FROM watchlist";
-//            PreparedStatement preparedStatement = conn.prepareStatement(sql);
-//            ResultSet resultSet = preparedStatement.executeQuery();
-//
-//            while (resultSet.next()) {
-//                WatchListItem watchListItem = new WatchListItem();
-//                watchListItem.setIdFilme(resultSet.getLong("id_filme"));
-//                watchListItem.setDataInsercaoFilme(resultSet.getString("data_insercao_filme"));
-//                watchList.getItensWatchList().add(watchListItem);
-//            }
-//
-//        } catch (SQLException e) {
-//            mensagem.layoutMensagem("Erro ao mostrar a watchlist!");
-//        }
+        try (Session session = DataBaseConnection.getInstance().getSession()) {
+            String query = "MATCH ((f:Filme)-[r:PERTENCE_A]->(w:Watchlist)) " +
+                    "RETURN ID(f) AS idFilme, r.adicionado_em AS dataInsercao";
+
+            Result result = session.run(query);
+
+            while (result.hasNext()) {
+                Record record = result.next();
+                WatchListItem watchListItem = new WatchListItem();
+                watchListItem.setIdFilme(record.get("idFilme").asLong());
+                watchListItem.setDataInsercaoFilme(
+                        LocalDateTime.parse(record.get("dataInsercao").asString())
+                                .format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+                );
+                watchList.getItensWatchList().add(watchListItem);
+            }
+        } catch (Exception e) {
+            mensagem.layoutMensagem("Erro ao mostrar a watchlist! " + e.getMessage());
+        }
 
         return watchList;
     }
 
     public final String getDataInsercaoFilme(long idFilme) {
-//        try {
-//            Connection conn = DataBaseConnection.getInstance().getConn();
-//            String sql = "SELECT data_insercao_filme FROM watchlist WHERE id_filme = ?";
-//            PreparedStatement preparedStatement = conn.prepareStatement(sql);
-//            preparedStatement.setLong(1, idFilme);
-//            ResultSet resultSet = preparedStatement.executeQuery();
-//
-//            if (resultSet.next()) {
-//                return resultSet.getDate("data_insercao_filme").toLocalDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-//            }
-//
-//        } catch (SQLException e) {
-//            mensagem.layoutMensagem("Erro ao mostrar a watchlist!");
-//        }
+        try (Session session = DataBaseConnection.getInstance().getSession()) {
+            String query = "MATCH ((f:Filme)-[r:PERTENCE_A]->(w:Watchlist)) " +
+                    "WHERE ID(f) = $idFilme " +
+                    "RETURN r.adicionado_em AS dataInsercao LIMIT 1";
+
+            Result result = session.run(query, Values.parameters("idFilme", idFilme));
+
+            if (result.hasNext()) {
+                String dataInsercao = result.next().get("dataInsercao").asString();
+                return LocalDateTime.parse(dataInsercao).format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+            }
+        } catch (Exception e) {
+            mensagem.layoutMensagem("Erro ao obter a data de inserção do filme na watchlist! " + e.getMessage());
+        }
 
         return "";
     }
 
     public final boolean existsFilmeInWatchList(long idFilme) {
-//        try {
-//            Connection conn = DataBaseConnection.getInstance().getConn();
-//            String sql = "SELECT * FROM watchlist WHERE id_filme = ?";
-//            PreparedStatement preparedStatement = conn.prepareStatement(sql);
-//            preparedStatement.setLong(1, idFilme);
-//
-//            ResultSet resultSet = preparedStatement.executeQuery();
-//
-//            return resultSet.next();
-//        } catch (SQLException e) {
-//            mensagem.layoutMensagem("Erro ao adicionar filme na watchlist!");
-//        }
+        try (Session session = DataBaseConnection.getInstance().getSession()) {
+            String query = "MATCH ((f:Filme)-[:PERTENCE_A]->(w:Watchlist)) " +
+                    "WHERE ID(f) = $idFilme " +
+                    "RETURN COUNT(w) > 0 AS exists";
+
+            Result result = session.run(query, Values.parameters("idFilme", idFilme));
+
+            if (result.hasNext()) {
+                return result.next().get("exists").asBoolean();
+            }
+        } catch (Exception e) {
+            mensagem.layoutMensagem("Erro ao verificar se o filme está na watchlist! " + e.getMessage());
+        }
 
         return false;
     }
 
     public final void saveWatchListItem(WatchListItem watchListItem) {
-//        try {
-//            Connection conn = DataBaseConnection.getInstance().getConn();
-//            String sql = "INSERT INTO watchlist(id_filme, data_insercao_filme) VALUES(?, ?)";
-//            PreparedStatement preparedStatement = conn.prepareStatement(sql);
-//            preparedStatement.setLong(1, watchListItem.getIdFilme());
-//            preparedStatement.setDate(2, Date.valueOf(watchListItem.getDataInsercaoFilme()));
-//            preparedStatement.executeUpdate();
-//
-//            mensagem.layoutMensagem("Filme adicionado na watchlist com sucesso!");
-//        } catch (SQLException e) {
-//            mensagem.layoutMensagem("Erro ao adicionar filme na watchlist!");
-//        }
+        try (Session session = DataBaseConnection.getInstance().getSession()) {
+            String query = "MATCH ((f:Filme) WHERE id(f) = $idFilme), (w:Watchlist)\n" +
+                    "CREATE (f)-[:PERTENCE_A {adicionado_em: date()}]->(w)";
+
+            session.run(query, Values.parameters("idFilme", watchListItem.getIdFilme()));
+
+            mensagem.layoutMensagem("Item salvo com sucesso!");
+        } catch (Exception e) {
+            mensagem.layoutMensagem("Erro ao salvar o filme na Watchlist! " + e.getMessage());
+        }
     }
 
     public final void deleteWatchListItem(long idFilme) {
-//        try {
-//            Connection conn = DataBaseConnection.getInstance().getConn();
-//            String sql = "DELETE FROM watchlist WHERE id_filme = ?";
-//            PreparedStatement preparedStatement = conn.prepareStatement(sql);
-//            preparedStatement.setLong(1, idFilme);
-//            preparedStatement.executeUpdate();
-//
-//            mensagem.layoutMensagem("Filme removido da watchlist com sucesso!");
-//        } catch (SQLException e) {
-//            mensagem.layoutMensagem("Erro ao remover o filme da watchlist!");
-//        }
+        try (Session session = DataBaseConnection.getInstance().getSession()) {
+            String query = "MATCH ((f:Filme)-[r:PERTENCE_A]->(w:Watchlist)) " +
+                    "WHERE ID(f) = $idFilme\n" +
+                    "DELETE r";
+
+            session.run(query, Values.parameters("idFilme", idFilme));
+
+            mensagem.layoutMensagem("Filme excluído da Watchlist com sucesso!");
+        } catch (Exception e) {
+            mensagem.layoutMensagem("Erro ao deletar filme da Watchlist! " + e.getMessage());
+        }
     }
 }
