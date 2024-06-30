@@ -76,8 +76,13 @@ public class DiretorDAO {
 
     public final void save(Diretor diretor) {
         try (Session session = DataBaseConnection.getInstance().getSession()) {
-            String cypherQuery = "CREATE (d:Diretor {nome: $nome})";
-            session.run(cypherQuery, Values.parameters("nome", diretor.getNomeDiretor()));
+            String cypherQuery = "CREATE (d:Diretor {nome: $nome}) WITH d " +
+                                "MATCH (p:Pais) WHERE id(p) = $idPais " +
+                                "CREATE (d)-[:PAIS_NASCIMENTO]->(p)";
+
+            session.run(cypherQuery, Values.parameters(
+                    "nome", diretor.getNomeDiretor(),
+                    "idPais", // AQUI));
             System.out.println("Diretor cadastrado com sucesso!");
         } catch (Exception e) {
             System.out.println("Erro ao cadastrar o novo diretor! " + e.getMessage());

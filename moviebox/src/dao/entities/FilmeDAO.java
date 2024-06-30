@@ -62,12 +62,19 @@ public class FilmeDAO {
 
     public final void save(Filme filme) {
         try (Session session = DataBaseConnection.getInstance().getSession()) {
-            String query = "CREATE (f:Filme {nome: $nome, duracao: $duracao, ano: $ano, sinopse: $sinopse})";
+            String query = "CREATE (f:Filme {nome: $nome, duracao: $duracao, ano: $ano, sinopse: $sinopse}) WITH f " +
+                            "MATCH (p:Pais) WHERE id(p) = $idPais " +
+                            "CREATE (f)-[:PAIS_ORIGEM]->(p) WITH (f) " +
+                            "MATCH (d:Diretor) WHERE id(d) = $idDiretor " +
+                            "CREATE (f)<-[:DIRIGIU]-(d)";
+
             session.run(query, Values.parameters(
                     "nome", filme.getNomeFilme(),
                     "duracao", filme.getDuracao(),
                     "ano", filme.getAno(),
-                    "sinopse", filme.getSinopse()
+                    "sinopse", filme.getSinopse(),
+                    "idPais", filme.getIdPais(),
+                    "idDiretor", filme.getIdDiretor()
             ));
 
             mensagem.layoutMensagem("Filme adicionado com sucesso!");
