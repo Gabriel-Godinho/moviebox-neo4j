@@ -2,11 +2,11 @@ package dao.relatorios;
 
 import connection.DataBaseConnection;
 import model.Filme;
+import org.neo4j.driver.Result;
+import org.neo4j.driver.Session;
+import org.neo4j.driver.Values;
+import org.neo4j.driver.Record;
 import view.MensagensView;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -20,38 +20,36 @@ public class RelatoriosDAO {
      *
      * @param idDiretor ID do diretor.
      * @return Todos os filmes da watchlist que foram dirigidos pelo diretor escolhido.
-     * */
+     */
     public final Set<Filme> buscarFilmesNaWatchlistPorDiretor(long idDiretor) {
-//        Set<Filme> filmes = new HashSet<>();
-//        try {
-//            Connection conn = DataBaseConnection.getInstance().getConn();
-//            String sql = """
-//                    SELECT * FROM filmes AS f INNER JOIN watchlist AS w
-//                    ON f.id_filme = w.id_filme
-//                    WHERE f.id_diretor = ?
-//                    """;
-//            PreparedStatement preparedStatement = conn.prepareStatement(sql);
-//            preparedStatement.setLong(1, idDiretor);
-//            ResultSet resultSet = preparedStatement.executeQuery();
-//
-//            while (resultSet.next()) {
-//                Filme filme = new Filme();
-//                filme.setIdFilme(resultSet.getLong("id_filme"));
-//                filme.setNomeFilme(resultSet.getString("nome_filme"));
-//                filme.setDuracao(resultSet.getInt("duracao"));
-//                filme.setAno(resultSet.getInt("ano"));
-//                filme.setIdDiretor(resultSet.getLong("id_diretor"));
-//                filme.setIdPais(resultSet.getLong("id_pais"));
-//                filme.setSinopse(resultSet.getString("sinopse"));
-//                filmes.add(filme);
-//            }
-//        } catch (SQLException e) {
-//            mensagem.layoutMensagem("Erro ao buscar pelo diretor na watchlist!");
-//        }
-//
-//        return filmes;
+        Set<Filme> filmes = new HashSet<>();
 
-        return new HashSet<>();
+        try (Session session = DataBaseConnection.getInstance().getSession()) {
+            String query = """
+                MATCH ((f:Filme)-[:PERTENCE_A]->(w:Watchlist)), (f)<-[:DIRIGIU]-(d:Diretor), (f)-[:PAIS_ORIGEM]->(p:Pais)
+                WHERE ID(d) = $idDiretor
+                RETURN f, ID(f) AS idFilme, f.nome AS nomeFilme, f.duracao AS duracao, f.ano AS ano, ID(d) AS idDiretor, ID(p) AS idPais, f.sinopse AS sinopse
+            """;
+
+            Result result = session.run(query, Values.parameters("idDiretor", idDiretor));
+
+            while (result.hasNext()) {
+                Record record = result.next();
+                Filme filme = new Filme();
+                filme.setIdFilme(record.get("idFilme").asLong());
+                filme.setNomeFilme(record.get("nomeFilme").asString());
+                filme.setDuracao(record.get("duracao").asInt());
+                filme.setAno(record.get("ano").asInt());
+                filme.setIdDiretor(record.get("idDiretor").asLong());
+                filme.setIdPais(record.get("idPais").asLong());
+                filme.setSinopse(record.get("sinopse").asString());
+                filmes.add(filme);
+            }
+        } catch (Exception e) {
+            mensagem.layoutMensagem("Erro ao buscar filmes na watchlist pelo diretor! " + e.getMessage());
+        }
+
+        return filmes;
     }
 
     /**
@@ -61,35 +59,34 @@ public class RelatoriosDAO {
      * @return Todos os filmes dirigidos pelo diretor escolhido.
      * */
     public final Set<Filme> buscarFilmesPorDiretor(long idDiretor) {
-//        Set<Filme> filmes = new HashSet<>();
-//        try {
-//            Connection conn = DataBaseConnection.getInstance().getConn();
-//            String sql = """
-//                    SELECT * FROM filmes AS f INNER JOIN diretores AS d
-//                    ON f.id_diretor = d.id_diretor
-//                    WHERE f.id_diretor = ?
-//                    """;
-//            PreparedStatement preparedStatement = conn.prepareStatement(sql);
-//            preparedStatement.setLong(1, idDiretor);
-//            ResultSet resultSet = preparedStatement.executeQuery();
-//
-//            while (resultSet.next()) {
-//                Filme filme = new Filme();
-//                filme.setIdFilme(resultSet.getLong("id_filme"));
-//                filme.setNomeFilme(resultSet.getString("nome_filme"));
-//                filme.setDuracao(resultSet.getInt("duracao"));
-//                filme.setAno(resultSet.getInt("ano"));
-//                filme.setIdDiretor(resultSet.getLong("id_diretor"));
-//                filme.setIdPais(resultSet.getLong("id_pais"));
-//                filme.setSinopse(resultSet.getString("sinopse"));
-//                filmes.add(filme);
-//            }
-//        } catch (SQLException e) {
-//            mensagem.layoutMensagem("Erro ao buscar pelo diretor na watchlist!");
-//        }
-//
-//        return filmes;
-        return new HashSet<>();
+        Set<Filme> filmes = new HashSet<>();
+
+        try (Session session = DataBaseConnection.getInstance().getSession()) {
+            String query = """
+                MATCH (f:Filme), (f)<-[:DIRIGIU]-(d:Diretor), (f)-[:PAIS_ORIGEM]->(p:Pais)
+                WHERE ID(d) = $idDiretor
+                RETURN f, ID(f) AS idFilme, f.nome AS nomeFilme, f.duracao AS duracao, f.ano AS ano, ID(d) AS idDiretor, ID(p) AS idPais, f.sinopse AS sinopse
+            """;
+
+            Result result = session.run(query, Values.parameters("idDiretor", idDiretor));
+
+            while (result.hasNext()) {
+                Record record = result.next();
+                Filme filme = new Filme();
+                filme.setIdFilme(record.get("idFilme").asLong());
+                filme.setNomeFilme(record.get("nomeFilme").asString());
+                filme.setDuracao(record.get("duracao").asInt());
+                filme.setAno(record.get("ano").asInt());
+                filme.setIdDiretor(record.get("idDiretor").asLong());
+                filme.setIdPais(record.get("idPais").asLong());
+                filme.setSinopse(record.get("sinopse").asString());
+                filmes.add(filme);
+            }
+        } catch (Exception e) {
+            mensagem.layoutMensagem("Erro ao buscar filmes na watchlist pelo diretor! " + e.getMessage());
+        }
+
+        return filmes;
     }
 
     /**
@@ -100,35 +97,36 @@ public class RelatoriosDAO {
      * @return Todos os filmes da watchlist cuja origem seja o país escolhido.
      * */
     public final Set<Filme> buscarFilmesNaWatchlistPorPais(long idPais) {
-//        Set<Filme> filmes = new HashSet<>();
-//        try {
-//            Connection conn = DataBaseConnection.getInstance().getConn();
-//            String sql = """
-//                    SELECT * FROM filmes AS f INNER JOIN watchlist AS w
-//                    ON f.id_filme = w.id_filme
-//                    WHERE f.id_pais = ?
-//                    """;
-//            PreparedStatement preparedStatement = conn.prepareStatement(sql);
-//            preparedStatement.setLong(1, idPais);
-//            ResultSet resultSet = preparedStatement.executeQuery();
-//
-//            while (resultSet.next()) {
-//                Filme filme = new Filme();
-//                filme.setIdFilme(resultSet.getLong("id_filme"));
-//                filme.setNomeFilme(resultSet.getString("nome_filme"));
-//                filme.setDuracao(resultSet.getInt("duracao"));
-//                filme.setAno(resultSet.getInt("ano"));
-//                filme.setIdDiretor(resultSet.getLong("id_diretor"));
-//                filme.setIdPais(resultSet.getLong("id_pais"));
-//                filme.setSinopse(resultSet.getString("sinopse"));
-//                filmes.add(filme);
-//            }
-//        } catch (SQLException e) {
-//            mensagem.layoutMensagem("Erro ao buscar pelo país na watchlist!");
-//        }
-//
-//        return filmes;
-        return new HashSet<>();
+        Set<Filme> filmes = new HashSet<>();
+
+        try (Session session = DataBaseConnection.getInstance().getSession()) {
+            String query = """
+                MATCH ((f:Filme)-[:PERTENCE_A]->(w:Watchlist)), (f)-[:PAIS_ORIGEM]->(p:Pais)
+                OPTIONAL MATCH (f)<-[:DIRIGIU]-(d:Diretor)
+                WHERE ID(p) = $idPais
+                RETURN f, ID(f) AS idFilme, f.nome AS nomeFilme, f.duracao AS duracao,
+                   f.ano AS ano, ID(d) AS idDiretor, ID(p) AS idPais, f.sinopse AS sinopse
+            """;
+
+            Result result = session.run(query, Values.parameters("idPais", idPais));
+
+            while (result.hasNext()) {
+                Record record = result.next();
+                Filme filme = new Filme();
+                filme.setIdFilme(record.get("idFilme").asLong());
+                filme.setNomeFilme(record.get("nomeFilme").asString());
+                filme.setDuracao(record.get("duracao").asInt());
+                filme.setAno(record.get("ano").asInt());
+                filme.setIdDiretor(record.containsKey("idDiretor") ? record.get("idDiretor").asLong() : 0);
+                filme.setIdPais(record.get("idPais").asLong());
+                filme.setSinopse(record.get("sinopse").asString());
+                filmes.add(filme);
+            }
+        } catch (Exception e) {
+            mensagem.layoutMensagem("Erro ao buscar filmes na watchlist pelo país! " + e.getMessage());
+        }
+
+        return filmes;
     }
 
     /**
@@ -138,34 +136,35 @@ public class RelatoriosDAO {
      * @return Todos os filmes de determinado país.
      * */
     public final Set<Filme> buscarFilmesPorPais(long idPais) {
-//        Set<Filme> filmes = new HashSet<>();
-//        try {
-//            Connection conn = DataBaseConnection.getInstance().getConn();
-//            String sql = """
-//                    SELECT * FROM filmes AS f INNER JOIN paises AS p
-//                    ON f.id_pais = p.id_pais
-//                    WHERE f.id_pais = ?
-//                    """;
-//            PreparedStatement preparedStatement = conn.prepareStatement(sql);
-//            preparedStatement.setLong(1, idPais);
-//            ResultSet resultSet = preparedStatement.executeQuery();
-//
-//            while (resultSet.next()) {
-//                Filme filme = new Filme();
-//                filme.setIdFilme(resultSet.getLong("id_filme"));
-//                filme.setNomeFilme(resultSet.getString("nome_filme"));
-//                filme.setDuracao(resultSet.getInt("duracao"));
-//                filme.setAno(resultSet.getInt("ano"));
-//                filme.setIdDiretor(resultSet.getLong("id_diretor"));
-//                filme.setSinopse(resultSet.getString("sinopse"));
-//                filmes.add(filme);
-//            }
-//        } catch (SQLException e) {
-//            mensagem.layoutMensagem("Erro ao buscar os filmes pelo país inserido!");
-//        }
-//
-//        return filmes;
-        return new HashSet<>();
+        Set<Filme> filmes = new HashSet<>();
+
+        try (Session session = DataBaseConnection.getInstance().getSession()) {
+            String query = """
+                MATCH (f:Filme)-[:PAIS_ORIGEM]->(p:Pais), (f)<-[:DIRIGIU]-(d:Diretor)
+                WHERE ID(p) = $idPais
+                RETURN f, ID(f) AS idFilme, f.nome AS nomeFilme, f.duracao AS duracao,
+                   f.ano AS ano, ID(p) AS idPais, f.sinopse AS sinopse, ID(d) AS idDiretor
+            """;
+
+            Result result = session.run(query, Values.parameters("idPais", idPais));
+
+            while (result.hasNext()) {
+                Record record = result.next();
+                Filme filme = new Filme();
+                filme.setIdFilme(record.get("idFilme").asLong());
+                filme.setNomeFilme(record.get("nomeFilme").asString());
+                filme.setDuracao(record.get("duracao").asInt());
+                filme.setAno(record.get("ano").asInt());
+                filme.setIdDiretor(record.get("idDiretor").asLong());
+                filme.setIdPais(record.get("idPais").asLong());
+                filme.setSinopse(record.get("sinopse").asString());
+                filmes.add(filme);
+            }
+        } catch (Exception e) {
+            mensagem.layoutMensagem("Erro ao buscar filmes pelo país inserido! " + e.getMessage());
+        }
+
+        return filmes;
     }
 
     /**
@@ -176,34 +175,33 @@ public class RelatoriosDAO {
      * @return Todos os filmes da watchlist adicionados dentro do período especificado.
      * */
     public final Set<Filme> buscarFilmesNaWatchlistPorAnoInserido(int anoInsercao) {
-//        Set<Filme> filmes = new HashSet<>();
-//        try {
-//            Connection conn = DataBaseConnection.getInstance().getConn();
-//            String sql = """
-//                    SELECT * FROM filmes AS f INNER JOIN watchlist AS w
-//                    ON f.id_filme = w.id_filme
-//                    WHERE DATE_PART('year', w.data_insercao_filme) = ?
-//                    """;
-//            PreparedStatement preparedStatement = conn.prepareStatement(sql);
-//            preparedStatement.setLong(1, anoInsercao);
-//            ResultSet resultSet = preparedStatement.executeQuery();
-//
-//            while (resultSet.next()) {
-//                Filme filme = new Filme();
-//                filme.setIdFilme(resultSet.getLong("id_filme"));
-//                filme.setNomeFilme(resultSet.getString("nome_filme"));
-//                filme.setDuracao(resultSet.getInt("duracao"));
-//                filme.setAno(resultSet.getInt("ano"));
-//                filme.setIdDiretor(resultSet.getLong("id_diretor"));
-//                filme.setIdPais(resultSet.getLong("id_pais"));
-//                filme.setSinopse(resultSet.getString("sinopse"));
-//                filmes.add(filme);
-//            }
-//        } catch (SQLException e) {
-//            mensagem.layoutMensagem("Erro ao buscar os filmes pelo ano inserido!");
-//        }
-//
-//        return filmes;
-        return new HashSet<>();
+        Set<Filme> filmes = new HashSet<>();
+
+        try (Session session = DataBaseConnection.getInstance().getSession()) {
+            String query = """
+                MATCH ((f:Filme)-[r:PERTENCE_A]->(w:Watchlist))
+                WHERE date.year(r.adicionado_em) = $anoInsercao
+                RETURN f, ID(f) AS idFilme, f.nome AS nomeFilme, f.duracao AS duracao,
+                   f.ano AS ano, ID(f)-[:PAIS_ORIGEM]->(p:Pais) AS idPais, f.sinopse AS sinopse
+            """;
+
+            Result result = session.run(query, Values.parameters("anoInsercao", anoInsercao));
+
+            while (result.hasNext()) {
+                Record record = result.next();
+                Filme filme = new Filme();
+                filme.setIdFilme(record.get("idFilme").asLong());
+                filme.setNomeFilme(record.get("nomeFilme").asString());
+                filme.setDuracao(record.get("duracao").asInt());
+                filme.setAno(record.get("ano").asInt());
+                filme.setIdPais(record.get("idPais").asLong());
+                filme.setSinopse(record.get("sinopse").asString());
+                filmes.add(filme);
+            }
+        } catch (Exception e) {
+            mensagem.layoutMensagem("Erro ao buscar filmes pelo ano inserido! " + e.getMessage());
+        }
+
+        return filmes;
     }
 }
