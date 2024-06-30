@@ -8,7 +8,7 @@ public class MensagensView {
     }
 
     public void retornarMenu() {
-        System.out.print(" Para voltar ao menu tecle [0] || ");
+        System.out.print(" Para voltar ao menu escreva [-1] || ");
     }
 
     public void limparTela(int espacos) {
