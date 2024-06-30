@@ -181,9 +181,10 @@ public class RelatoriosDAO {
             String query = """
                 MATCH ((f:Filme)-[r:PERTENCE_A]->(w:Watchlist))
                 WHERE date(r.adicionado_em).year = $anoInsercao
-                OPTIONAL MATCH (f)-[:PAIS_ORIGEM]->(p:Pais)
-                RETURN f, ID(f) AS idFilme, f.nome AS nomeFilme, f.duracao AS duracao,
-                    f.ano AS ano, ID(p) AS idPaisOrigem, f.sinopse AS sinopse
+                OPTIONAL MATCH (f)-[:PAIS_ORIGEM]->(p:Pais),
+                    (f)<-[:DIRIGIU]-(d:Diretor)
+                RETURN f, ID(f) AS idFilme, f.nome AS nomeFilme, ID(d) AS idDiretor, f.duracao AS duracao,
+                    f.ano AS ano, ID(p) AS idPais, f.sinopse AS sinopse
             """;
 
             Result result = session.run(query, Values.parameters("anoInsercao", anoInsercao));
@@ -192,6 +193,7 @@ public class RelatoriosDAO {
                 Record record = result.next();
                 Filme filme = new Filme();
                 filme.setIdFilme(record.get("idFilme").asLong());
+                filme.setIdDiretor(record.get("idDiretor").asLong());
                 filme.setNomeFilme(record.get("nomeFilme").asString());
                 filme.setDuracao(record.get("duracao").asInt());
                 filme.setAno(record.get("ano").asInt());
