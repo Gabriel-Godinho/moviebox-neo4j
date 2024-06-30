@@ -42,7 +42,7 @@ public class DiretorDAO {
 
         try {
             Connection conn = DataBaseConnection.getInstance().getConn();
-            String sql = "MATCH (d:Diretor) WHERE ID(d) = $1";
+            String sql = "MATCH (d:Diretor) WHERE ID(d) = $1 RETURN d";
             PreparedStatement preparedStatement = conn.prepareStatement(sql);
             preparedStatement.setLong(1, idDiretor);
             ResultSet rs = preparedStatement.executeQuery();
@@ -64,7 +64,7 @@ public class DiretorDAO {
             String sql = "CREATE (d:Diretor {nome: $1})";
             PreparedStatement preparedStatement = conn.prepareStatement(sql);
             preparedStatement.setString(1, diretor.getNomeDiretor());
-            preparedStatement.setLong(2, diretor.getIdNacionalidade());
+//            preparedStatement.setLong(2, diretor.getIdNacionalidade());
             preparedStatement.executeUpdate();
 
             mensagem.layoutMensagem("Diretor cadastrado com sucesso!");
@@ -76,13 +76,15 @@ public class DiretorDAO {
     public final void update(Diretor diretor) {
         try {
             // TODO - Verificar como fazer
+            // MATCH (d:Diretor) WHERE id(d) = 65 SET d.nome = 'Teste3'
             Connection conn = DataBaseConnection.getInstance().getConn();
-            StringBuilder sb = new StringBuilder("UPDATE diretores SET");
+//            StringBuilder sb = new StringBuilder("UPDATE diretores SET");
+            StringBuilder sb = new StringBuilder("MATCH (d:Diretor) WHERE id(d) = ? SET");
 
             List<Object> params = new ArrayList<>();
 
             if (!diretor.getNomeDiretor().equals("0")) {
-                sb.append(" nome = ?,");
+                sb.append(" d.nome = ?,");
                 params.add(diretor.getNomeDiretor());
             }
 
@@ -90,7 +92,7 @@ public class DiretorDAO {
                 sb.deleteCharAt(sb.length() - 1);
             }
 
-            sb.append(" WHERE id_diretor = ?");
+//            sb.append(" WHERE id(d) = ?");
             params.add(diretor.getIdDiretor());
 
             PreparedStatement preparedStatement = conn.prepareStatement(sb.toString());
