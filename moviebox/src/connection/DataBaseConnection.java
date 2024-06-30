@@ -16,7 +16,6 @@ public class DataBaseConnection {
         final String HOSTNAME = "bolt://localhost:7687";
         final String USER_NAME = "neo4j";
         final String PASSWORD = "moviebox234";
-
         this.driver = GraphDatabase.driver(HOSTNAME, AuthTokens.basic(USER_NAME, PASSWORD));
     }
 
