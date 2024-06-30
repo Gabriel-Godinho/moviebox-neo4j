@@ -29,7 +29,7 @@ public class DiretorDAO {
                 diretores.add(diretor);
             }
         } catch (Exception e) {
-            System.out.println("Erro ao buscar os diretores cadastrados! " + e.getMessage());
+            mensagem.layoutMensagem("Erro ao buscar os diretores cadastrados! " + e.getMessage());
         }
 
         return diretores;
@@ -49,7 +49,7 @@ public class DiretorDAO {
                 diretor.setNomeDiretor(record.get("nome").asString());
             }
         } catch (Exception e) {
-            System.out.println("Erro ao buscar o diretor com ID " + idDiretor + ": " + e.getMessage());
+            mensagem.layoutMensagem("Erro ao buscar o diretor com ID " + idDiretor + ": " + e.getMessage());
         }
 
         return diretor;
@@ -69,7 +69,7 @@ public class DiretorDAO {
                 diretor.setNomeDiretor(record.get("nome").asString());
             }
         } catch (Exception e) {
-            System.out.println("Erro ao buscar o diretor com ID " + idFilme + ": " + e.getMessage());
+            mensagem.layoutMensagem("Erro ao buscar o diretor com ID " + idFilme + ": " + e.getMessage());
         }
 
         return diretor;
@@ -85,32 +85,40 @@ public class DiretorDAO {
                     "nome", diretor.getNomeDiretor(),
                     "idPais", diretor.getIdPais()
             ));
-            System.out.println("Diretor cadastrado com sucesso!");
+            mensagem.layoutMensagem("Diretor cadastrado com sucesso!");
         } catch (Exception e) {
-            System.out.println("Erro ao cadastrar o novo diretor! " + e.getMessage());
+            mensagem.layoutMensagem("Erro ao cadastrar diretor! " + e.getMessage());
         }
     }
 
     public final void update(Diretor diretor) {
         try (Session session = DataBaseConnection.getInstance().getSession()) {
-            StringBuilder cypherQuery = new StringBuilder("MATCH (d:Diretor) WHERE id(d) = $id SET");
+
+            StringBuilder cypherQuery = new StringBuilder("MATCH (d:Diretor) WHERE id(d) = $idDiretor ");
 
             Map<String, Object> parameters = new HashMap<>();
-            parameters.put("id", diretor.getIdDiretor());
+            parameters.put("idDiretor", diretor.getIdDiretor());
+
+            if (diretor.getIdPais() != -1) {
+                // Remove qualquer relacionamento existente com outro país
+                cypherQuery.append("OPTIONAL MATCH (d)-[r:PAIS_NASCIMENTO]->(:Pais) " +
+                        "DELETE r " +
+                        "WITH d " +
+                        // Cria um novo relacionamento com o país especificado
+                        "MATCH (novoP:Pais) WHERE id(novoP) = $idPais " +
+                        "CREATE (d)-[:PAIS_NASCIMENTO]->(novoP)");
+                parameters.put("idPais", diretor.getIdPais());
+            }
 
             if (!diretor.getNomeDiretor().equals("0")) {
-                cypherQuery.append(" d.nome = $nome,");
+                cypherQuery.append(" SET d.nome = $nome");
                 parameters.put("nome", diretor.getNomeDiretor());
             }
 
-            if (cypherQuery.toString().endsWith(",")) {
-                cypherQuery.deleteCharAt(cypherQuery.length() - 1); // Remove a vírgula final
-            }
-
             session.run(cypherQuery.toString(), parameters);
-            System.out.println("Diretor atualizado com sucesso!");
+            mensagem.layoutMensagem("Diretor alterado com sucesso!");
         } catch (Exception e) {
-            System.out.println("Erro ao atualizar o diretor! " + e.getMessage());
+            mensagem.layoutMensagem("Erro ao alterar diretor! " + e.getMessage());
         }
     }
 }

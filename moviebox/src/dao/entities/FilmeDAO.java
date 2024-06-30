@@ -85,10 +85,15 @@ public class FilmeDAO {
 
     public final void update(Filme filme) {
         try (Session session = DataBaseConnection.getInstance().getSession()) {
-            StringBuilder sb = new StringBuilder("MATCH (f:Filme) WHERE ID(f) = $id SET ");
+
+            StringBuilder sb = new StringBuilder("MATCH (f:Filme) WHERE ID(f) = $idFilme " +
+                    "OPTIONAL MATCH (f)-[ro:PAIS_ORIGEM]->(:Pais) " +
+                    "OPTIONAL MATCH (f)<-[rd:DIRIGIU]-(:Diretor) " +
+                    "DELETE ro DELETE rd WITH f " +
+                    "MATCH (novoP:Pais) WHERE id(novoP) = $idPais ");
 
             Map<String, Object> params = new HashMap<>();
-            params.put("id", filme.getIdFilme());
+            params.put("idFilme", filme.getIdFilme());
 
             if (filme.getNomeFilme() != null && !filme.getNomeFilme().isBlank()) {
                 sb.append("f.nome = $nome, ");
@@ -124,6 +129,7 @@ public class FilmeDAO {
 
     public final void delete(long idFilme) {
         try (Session session = DataBaseConnection.getInstance().getSession()) {
+
             String query = "MATCH (f:Filme) WHERE ID(f) = $id DETACH DELETE f";
             session.run(query, Values.parameters("id", idFilme));
 
