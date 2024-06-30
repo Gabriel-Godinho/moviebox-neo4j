@@ -24,7 +24,7 @@ public class FilmeDAO {
             while (result.hasNext()) {
                 Record record = result.next();
                 Filme filme = new Filme();
-                filme.setIdPais(record.get("idFilme").asLong());
+                filme.setIdFilme(record.get("idFilme").asLong());
                 filme.setNomeFilme(record.get("nome").asString());
                 filme.setDuracao(record.get("duracao").asInt());
                 filme.setAno(record.get("ano").asInt());
@@ -42,16 +42,16 @@ public class FilmeDAO {
         Filme filme = new Filme();
 
         try (Session session = DataBaseConnection.getInstance().getSession()) {
-            String query = "MATCH (f:Filme) WHERE ID(f) = $id RETURN f";
+            String query = "MATCH (f:Filme) WHERE ID(f) = $id RETURN ID(f) AS idFilme, f.nome AS nome, f.duracao AS duracao, f.ano AS ano, f.sinopse AS sinopse";
             Result result = session.run(query, Values.parameters("id", idFilme));
 
             if (result.hasNext()) {
                 Record record = result.next();
-                filme.setIdFilme(record.get("f").get("id").asLong());
-                filme.setNomeFilme(record.get("f").get("nome").asString());
-                filme.setDuracao(record.get("f").get("duracao").asInt());
-                filme.setAno(record.get("f").get("ano").asInt());
-                filme.setSinopse(record.get("f").get("sinopse").asString());
+                filme.setIdFilme(record.get("idFilme").asLong());
+                filme.setNomeFilme(record.get("nome").asString());
+                filme.setDuracao(record.get("duracao").asInt());
+                filme.setAno(record.get("ano").asInt());
+                filme.setSinopse(record.get("sinopse").asString());
             }
         } catch (Exception e) {
             mensagem.layoutMensagem("Erro ao buscar o filme especificado! " + e.getMessage());
