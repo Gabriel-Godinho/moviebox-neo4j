@@ -30,10 +30,7 @@ public class WatchListDAO {
                 Record record = result.next();
                 WatchListItem watchListItem = new WatchListItem();
                 watchListItem.setIdFilme(record.get("idFilme").asLong());
-                watchListItem.setDataInsercaoFilme(
-                        LocalDateTime.parse(record.get("dataInsercao").toString())
-                                .format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
-                );
+                watchListItem.setDataInsercaoFilme(record.get("dataInsercao").toString());
                 watchList.getItensWatchList().add(watchListItem);
             }
         } catch (Exception e) {
@@ -53,7 +50,7 @@ public class WatchListDAO {
 
             if (result.hasNext()) {
                 String dataInsercao = result.next().get("dataInsercao").toString();
-                return LocalDateTime.parse(dataInsercao).format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+                return dataInsercao;
             }
         } catch (Exception e) {
             mensagem.layoutMensagem("Erro ao obter a data de inserção do filme na watchlist! " + e.getMessage());
