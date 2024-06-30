@@ -62,7 +62,7 @@ public class DiretoresView {
 
         System.out.println("----------------------------------------------");
         System.out.print(" ID do país de origem: ");
-        int idPais = input.nextInt();
+        long idPais = input.nextLong();
         dados.add(idPais);
 
         return dados;
