@@ -61,7 +61,7 @@ public class PaisDAO {
         PaisOrigem paisOrigem = null;
 
         try (Session session = DataBaseConnection.getInstance().getSession()) {
-            String query = "MATCH (d:Diretor WHERE id(d) = $id)--(pais:Pais) RETURN p.nome AS nome, ID(p) AS idPais";
+            String query = "MATCH (d:Diretor WHERE id(d) = $id)--(pais:Pais) RETURN pais.nome AS nome, ID(pais) AS idPais";
             Result result = session.run(query, Values.parameters("id", idDiretor));
 
             if (result.hasNext()) {
