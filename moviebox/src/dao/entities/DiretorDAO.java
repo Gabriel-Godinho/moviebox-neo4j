@@ -29,7 +29,7 @@ public class DiretorDAO {
                 diretores.add(diretor);
             }
         } catch (Exception e) {
-            System.out.println("Erro ao buscar os diretores cadastrados! " + e.getMessage());
+            mensagem.layoutMensagem("Erro ao buscar os diretores cadastrados! " + e.getMessage());
         }
 
         return diretores;
@@ -49,7 +49,7 @@ public class DiretorDAO {
                 diretor.setNomeDiretor(record.get("nome").asString());
             }
         } catch (Exception e) {
-            System.out.println("Erro ao buscar o diretor com ID " + idDiretor + ": " + e.getMessage());
+            mensagem.layoutMensagem("Erro ao buscar o diretor com ID " + idDiretor + ": " + e.getMessage());
         }
 
         return diretor;
@@ -69,7 +69,7 @@ public class DiretorDAO {
                 diretor.setNomeDiretor(record.get("nome").asString());
             }
         } catch (Exception e) {
-            System.out.println("Erro ao buscar o diretor com ID " + idFilme + ": " + e.getMessage());
+            mensagem.layoutMensagem("Erro ao buscar o diretor com ID " + idFilme + ": " + e.getMessage());
         }
 
         return diretor;
@@ -85,9 +85,9 @@ public class DiretorDAO {
                     "nome", diretor.getNomeDiretor(),
                     "idPais", diretor.getIdPais()
             ));
-            System.out.println("Diretor cadastrado com sucesso!");
+            mensagem.layoutMensagem("Diretor cadastrado com sucesso!");
         } catch (Exception e) {
-            System.out.println("Erro ao cadastrar o novo diretor! " + e.getMessage());
+            mensagem.layoutMensagem("Erro ao cadastrar diretor! " + e.getMessage());
         }
     }
 
@@ -117,9 +117,9 @@ public class DiretorDAO {
             }
 
             session.run(cypherQuery.toString(), parameters);
-            System.out.println("Diretor atualizado com sucesso!");
+            mensagem.layoutMensagem("Diretor alterado com sucesso!");
         } catch (Exception e) {
-            System.out.println("Erro ao atualizar o diretor! " + e.getMessage());
+            mensagem.layoutMensagem("Erro ao alterar diretor! " + e.getMessage());
         }
     }
 }
