@@ -142,13 +142,13 @@ public class FilmeDAO {
             if (filme.getIdDiretor() != -1) {
                 // Deleta relacionamento antigo
                 sb.append("WITH f\n");
-                sb.append("OPTIONAL MATCH (f)-[r:DIRIGIU]->()\n");
+                sb.append("OPTIONAL MATCH (f)<-[r:DIRIGIU]-()\n");
                 sb.append("DELETE r\n");
 
                 // Cria novo relacionamento
                 sb.append("WITH f\n");
                 sb.append("MATCH (d:Diretor) WHERE ID(d) = $idDiretor\n");
-                sb.append("CREATE (f)-[:DIRIGIU]->(d)\n");
+                sb.append("CREATE (f)<-[:DIRIGIU]-(d)\n");
                 params.put("idDiretor", filme.getIdDiretor());
             }
 

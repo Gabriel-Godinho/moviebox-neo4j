@@ -42,9 +42,7 @@ public class DiretoresView {
         int idDiretor = input.nextInt();
 
         mensagem.limparTela(10);
-        System.out.println("------------------------------------------------");
-        System.out.println(" Preencha somente os campos que deseja editar e ");
-        System.out.println(" marque o restante com [0]: ");
+        mensagem.edicao();
 
         ArrayList<Object> dados = formulario(input);
 
